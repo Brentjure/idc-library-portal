@@ -1,0 +1,155 @@
+@let f = form;
+@let errors = f.errors();
+<app-drawer [open]="isOpen()" [heading]="heading()" headingId="user-drawer-heading" [hint]="hint()" icon="user" (closed)="close()">
+  @if (error()) {
+    <app-alert>{{ error() }}</app-alert>
+  }
+
+  @if (mode() === 'link' && link(); as l) {
+    <app-alert kind="success">
+      {{ l.user.name }} is invited as {{ roleLabel(l.user.roleName) }}. The link works until {{ linkExpiry() }}, once.
+    </app-alert>
+    <div>
+      <label class="field-label" for="user-invite-link">Invitation link</label>
+      <div class="flex gap-2">
+        <input id="user-invite-link" class="field-input font-mono text-xs" readonly [value]="l.link" (focus)="$any($event.target).select()" />
+        <button type="button" class="btn flex-none" (click)="copy(l.link, 'Link')"><app-icon name="hash" [size]="15" />Copy link</button>
+      </div>
+    </div>
+    <div>
+      <label class="field-label" for="user-invite-message">Message to send</label>
+      <textarea id="user-invite-message" class="field-input h-auto resize-y py-2.5" rows="5" readonly [value]="message()"></textarea>
+      <button type="button" class="btn btn-primary mt-2 w-full" (click)="copy(message(), 'Message')">Copy message</button>
+    </div>
+    <p class="hint">
+      This link is only shown now. If it gets lost, open {{ l.user.name.split(' ')[0] }} from the list and send a new one; the old link then stops working.
+    </p>
+  } @else {
+    @if (isSelf()) {
+      <app-alert kind="warn">This is you. You can’t disable yourself or take away your own Administrator role.</app-alert>
+    }
+
+    @if (mode() === 'edit' && isInvited() && status(); as st) {
+      <div class="flex flex-wrap items-center gap-2.5 rounded-xl border border-line bg-surface-2 p-3">
+        <span class="pill" [class]="st.pill">{{ st.label }}</span>
+        <small class="mr-auto text-xs text-ink-3">{{ st.note || 'Hasn’t set up their account yet' }}</small>
+        <button type="button" class="btn btn-sm" [disabled]="saving()" (click)="sendNewLink()">{{ user()!.inviteExpired ? 'Send new link' : 'New link' }}</button>
+        <button type="button" class="btn btn-sm btn-danger" [disabled]="saving()" (click)="confirmWithdraw.set(true)">Withdraw</button>
+      </div>
+    }
+
+    <form class="flex flex-col gap-3.5" novalidate (submit)="$event.preventDefault(); save()">
+      <div>
+        <label class="field-label" for="user-edit-name">Full name <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+        <input id="user-edit-name" class="field-input" maxlength="150" autocomplete="off" [class.invalid]="!!errors.name" [value]="f.name()" (input)="setText('name', $event)" />
+        @if (errors.name) {
+          <p class="err-msg">{{ errors.name }}</p>
+        }
+      </div>
+      <div>
+        <label class="field-label" for="user-edit-email">Email <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+        <input
+          id="user-edit-email"
+          class="field-input"
+          type="email"
+          maxlength="150"
+          autocomplete="off"
+          [class.invalid]="!!errors.email"
+          [value]="f.email()"
+          (input)="setText('email', $event)"
+        />
+        @if (errors.email) {
+          <p class="err-msg">{{ errors.email }}</p>
+        } @else {
+          <p class="hint">They sign in with this. Each email belongs to one person.</p>
+        }
+      </div>
+      <div>
+        <label class="field-label" for="user-edit-phone">Phone <span class="opt">optional</span></label>
+        <input
+          id="user-edit-phone"
+          class="field-input"
+          inputmode="tel"
+          maxlength="20"
+          autocomplete="off"
+          placeholder="For sending the invitation by WhatsApp"
+          [class.invalid]="!!errors.phone"
+          [value]="f.phone()"
+          (input)="setText('phone', $event)"
+        />
+        @if (errors.phone) {
+          <p class="err-msg">{{ errors.phone }}</p>
+        }
+      </div>
+
+      <fieldset class="m-0 border-0 p-0">
+        <legend class="field-label">Role</legend>
+        <div class="flex flex-col gap-2" role="radiogroup">
+          @for (card of roleCards(); track card.role.id) {
+            <label
+              class="flex cursor-pointer items-start gap-3 rounded-xl border p-3"
+              [class]="f.roleId() === card.role.id ? 'border-gold bg-gold-soft' : 'border-line bg-surface'"
+              [class.opacity-50]="card.locked"
+              [class.cursor-not-allowed]="card.locked"
+            >
+              <input
+                type="radio"
+                name="user-role"
+                class="mt-0.5 size-4 accent-gold-deep"
+                [id]="'user-edit-roleId-' + card.role.id"
+                [checked]="f.roleId() === card.role.id"
+                [disabled]="card.locked"
+                (change)="chooseRole(card.role.id)"
+              />
+              <span class="min-w-0 flex-1">
+                <b class="block text-[13.5px]">{{ card.label }}</b>
+                @if (card.role.description) {
+                  <small class="block text-xs text-ink-2">{{ card.role.description }}</small>
+                }
+              </span>
+              <small class="flex-none text-[11px] text-ink-3 tabular-nums">{{ card.count }}</small>
+            </label>
+          }
+        </div>
+        @if (errors.roleId) {
+          <p class="err-msg">{{ errors.roleId }}</p>
+        }
+      </fieldset>
+
+      @if (mode() === 'edit' && !isInvited()) {
+        <div>
+          <span class="field-label">Access</span>
+          <div class="seg" role="group" aria-label="Access">
+            <button type="button" [attr.aria-pressed]="f.canSignIn()" (click)="f.canSignIn.set(true)">Can sign in</button>
+            <button type="button" [attr.aria-pressed]="!f.canSignIn()" [disabled]="isSelf()" (click)="f.canSignIn.set(false)">Disabled</button>
+          </div>
+          <p class="hint">Disabled users are signed out at once and can’t sign in. Their past work stays recorded.</p>
+        </div>
+      }
+
+      <button type="submit" class="hidden" tabindex="-1" aria-hidden="true"></button>
+    </form>
+  }
+
+  <ng-container drawerFooter>
+    @if (mode() === 'link') {
+      <button type="button" class="btn btn-primary ml-auto" (click)="closed.emit()">Done</button>
+    } @else {
+      <button type="button" class="btn mr-auto" [disabled]="saving()" (click)="close()">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        {{ saving() ? 'Saving…' : mode() === 'add' ? 'Invite' : 'Save changes' }}
+      </button>
+    }
+  </ng-container>
+</app-drawer>
+
+<app-confirm-dialog
+  [open]="confirmWithdraw()"
+  [heading]="'Withdraw the invitation for ' + (user()?.name ?? '') + '?'"
+  confirmLabel="Yes, withdraw"
+  [busy]="saving()"
+  (confirmed)="withdraw()"
+  (cancelled)="confirmWithdraw.set(false)"
+>
+  <p>Their link stops working and they are removed from the list. You can invite them again later.</p>
+</app-confirm-dialog>

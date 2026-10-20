@@ -1,0 +1,25 @@
+<div class="layout grid min-h-dvh transition-[grid-template-columns] duration-200" [class.slim]="slim()">
+  <app-sidebar
+    [slim]="slim()"
+    [mobileOpen]="mobileMenuOpen()"
+    (toggleSlim)="toggleSlim()"
+    (closeMobile)="mobileMenuOpen.set(false)"
+  />
+
+  <main class="flex min-w-0 flex-col gap-[18px] px-4 pt-[18px] pb-8 min-[861px]:px-7">
+    <app-top-bar [title]="pageHeading()" (openMenu)="mobileMenuOpen.set(true)" />
+    <router-outlet />
+  </main>
+</div>
+
+<!-- Desk drawers float over every page. Each is only created for staff allowed to use it. -->
+@if (auth.can('loans.borrow')) {
+  <app-borrow-drawer />
+}
+@if (auth.can('loans.return')) {
+  <app-return-drawer />
+}
+@if (auth.can('donations.record')) {
+  <app-donate-drawer />
+}
+<app-toast />

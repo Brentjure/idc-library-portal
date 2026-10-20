@@ -1,0 +1,112 @@
+<app-drawer
+  heading="Borrow books"
+  headingId="borrow-heading"
+  hint="Record each member in the queue, then hand over their books."
+  icon="bookOpen"
+  [open]="isOpen()"
+  (closed)="desk.close()"
+>
+  <ng-container drawerStats>
+    <span class="drawer-stat"><b class="num">{{ summary.summary()?.borrowedToday ?? 0 }}</b> borrowed today</span>
+    <span class="drawer-stat">{{ todayLabel }}</span>
+    <span class="drawer-stat">Up to {{ maxBooks }} books each</span>
+  </ng-container>
+
+  <!-- 1. Member -->
+  <app-step [n]="1" heading="Member" subtitle="Search by name or phone, then pick from the list" [done]="!!form.member()">
+    <app-member-picker idPrefix="borrow" [canAdd]="true" [member]="form.member()" (memberChange)="onMemberChange($event)" />
+    @if (form.member(); as member) {
+      <div class="flex flex-wrap gap-1.5">
+        @if (member.group) {
+          <span class="meta-chip">{{ member.group }}</span>
+        }
+        <span class="meta-chip">{{ plural(member.onLoanCount, 'book') }} already on loan</span>
+      </div>
+      @if (member.overdueCount) {
+        <app-alert kind="warn">
+          Has {{ plural(member.overdueCount, 'overdue book') }}. You can still lend, but remind them to bring it back.
+        </app-alert>
+      }
+    }
+  </app-step>
+
+  <!-- 2. Books -->
+  <app-step [n]="2" heading="Books" [subtitle]="booksHint()" [done]="form.books().length > 0">
+    <div stepAside class="ml-auto flex gap-1 pt-1" aria-hidden="true">
+      @for (slot of form.slots(); track $index) {
+        <i
+          class="h-5 w-3.5 rounded-[3px]"
+          [class]="slot === 'on-loan' ? 'bg-ink-3 opacity-35' : slot === 'adding' ? 'bg-gold' : 'border-[1.5px] border-dashed border-line'"
+        ></i>
+      }
+    </div>
+
+    <app-typeahead
+      #bookField
+      label="Book title"
+      inputId="borrow-book"
+      icon="book"
+      [placeholder]="bookPlaceholder()"
+      [disabled]="!form.member() || form.booksLeft() <= 0"
+      [clearOnPick]="true"
+      [fetch]="searchBooks"
+      [isDisabled]="cannotAdd"
+      (picks)="form.addBook($event)"
+    >
+      <ng-template #row let-book>
+        <app-book-line [title]="book.title" [subtitle]="book.author + (book.categoryName ? ' · ' + book.categoryName : '')">
+          @let state = availability(book);
+          <span class="text-right text-[11.5px] whitespace-nowrap" [class]="state.css">{{ state.text }}</span>
+        </app-book-line>
+      </ng-template>
+    </app-typeahead>
+
+    @if (form.pendingBook(); as pending) {
+      <app-alert kind="success">“{{ pending.title }}” will be added once you pick the member.</app-alert>
+    }
+
+    <app-book-cart
+      [books]="form.books()"
+      [emptyText]="form.member() ? 'Search a title above. Add each book the member is taking.' : 'Pick the member first, then add their books.'"
+      (remove)="form.removeBook($event)"
+    />
+  </app-step>
+
+  <!-- 3. Loan period -->
+  <app-step [n]="3" heading="Loan period" subtitle="When the books should come back" [done]="true">
+    <app-loan-period
+      [startDate]="form.startDate"
+      [periodDays]="form.periodDays()"
+      [dueDate]="form.dueDate()"
+      (periodPicked)="form.choosePeriod($event)"
+      (datePicked)="form.chooseDueDate($event)"
+    />
+  </app-step>
+
+  <ng-container drawerFooter>
+    <div class="w-full text-xs text-ink-3" aria-live="polite">
+      @if (error()) {
+        <app-alert>{{ error() }}</app-alert>
+      } @else if (!form.member()) {
+        Select a member to begin
+      } @else if (!form.books().length) {
+        <b class="block text-[13.5px] text-ink">{{ form.member()!.fullName }}</b>Add at least one book
+      } @else {
+        @let due = form.dueDate();
+        <app-summary-tile
+          [label]="due.toLocaleDateString('en-GB', { month: 'short' })"
+          [value]="due.getDate()"
+          [caption]="due.toLocaleDateString('en-GB', { weekday: 'short' })"
+          [title]="plural(form.books().length, 'book') + ' for ' + form.member()!.fullName"
+        >
+          Due back {{ formatShort(due) }}
+        </app-summary-tile>
+      }
+    </div>
+    <button type="button" class="btn mr-auto max-[480px]:mr-0 max-[480px]:flex-1" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save(false)">Save &amp; close</button>
+    <button type="button" class="btn btn-primary max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save(true)">
+      {{ saving() ? 'Saving…' : 'Save & next member' }}
+    </button>
+  </ng-container>
+</app-drawer>

@@ -1,0 +1,12 @@
+<div class="flex items-center gap-2.5 text-[12.5px] font-medium text-ink-2">
+  <span class="grid size-[30px] flex-none place-items-center rounded-full" [class]="alert() ? 'bg-bad-bg text-bad' : 'bg-gold-soft text-gold-deep'">
+    <app-icon [name]="icon()" [size]="15" />
+  </span>
+  {{ label() }}
+</div>
+<div>
+  <div class="num font-display text-2xl leading-none font-bold" [class.text-bad]="alert() && !!value()">
+    {{ value() ?? '–' }}
+  </div>
+  <div class="mt-1 text-[11.5px] text-ink-3">{{ caption() }}</div>
+</div>

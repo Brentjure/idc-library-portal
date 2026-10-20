@@ -1,0 +1,31 @@
+<ul class="m-0 flex list-none flex-col gap-2 p-0">
+  @for (loan of loans(); track loan.transactionId) {
+    @let condition = selected()[loan.transactionId];
+    @let due = dueState(loan.dueDate);
+    <li class="item" [class.ticked]="!!condition" [class.late]="due.late">
+      <label class="flex cursor-pointer items-center gap-2.5 px-3 py-2.5">
+        <input type="checkbox" class="m-0 size-[18px] flex-none accent-gold-deep" [checked]="!!condition" (change)="toggled.emit(loan)" />
+        <app-book-line [title]="loan.title" [subtitle]="loan.bookCode + ' · borrowed ' + formatDayMonth(loan.borrowedAt)">
+          <span class="pill" [class]="due.pillClass">{{ due.text }}</span>
+        </app-book-line>
+      </label>
+
+      @if (condition) {
+        <div class="pr-3 pb-2.5 pl-3 min-[481px]:pl-[76px]">
+          <app-choice-chips
+            look="pills"
+            [label]="'Condition of ' + loan.title"
+            [options]="conditions"
+            [value]="condition"
+            (valueChange)="onCondition(loan, $event)"
+          >
+            <span class="mr-0.5 text-[11.5px] text-ink-2">Condition</span>
+          </app-choice-chips>
+          @if (condition === 'DAMAGED') {
+            <p class="mt-1.5 mb-0 text-[11.5px] text-bad">Kept off the shelf until it is repaired or replaced.</p>
+          }
+        </div>
+      }
+    </li>
+  }
+</ul>

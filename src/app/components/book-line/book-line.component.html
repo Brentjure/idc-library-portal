@@ -1,0 +1,9 @@
+<span class="mini-cover" [style.background]="color()"></span>
+<span class="min-w-0 flex-1">
+  <b class="block text-[13px] leading-tight">{{ title() }}</b>
+  @if (subtitle()) {
+    <small class="text-[11.5px] text-ink-3">{{ subtitle() }}</small>
+  }
+  <ng-content select="[bookLineBelow]" />
+</span>
+<ng-content />

@@ -1,0 +1,17 @@
+<span
+  class="absolute top-0 left-0 grid size-[26px] place-items-center rounded-full border text-xs font-bold transition-colors"
+  [class]="done() ? 'border-gold bg-gold text-on-gold' : 'border-line bg-surface'"
+  aria-hidden="true"
+>
+  {{ done() ? '✓' : n() }}
+</span>
+
+<div class="flex items-start gap-2.5 text-[13.5px] font-bold">
+  <div>
+    {{ heading() }}
+    <small class="mt-px block text-xs font-medium text-ink-3">{{ subtitle() }}</small>
+  </div>
+  <ng-content select="[stepAside]" />
+</div>
+
+<ng-content />

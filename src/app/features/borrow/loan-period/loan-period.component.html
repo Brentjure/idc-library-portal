@@ -1,0 +1,14 @@
+<div class="flex flex-col gap-2.5">
+  <app-choice-chips label="Loan period" look="cards" [options]="options()" [value]="periodDays()" (valueChange)="onPeriodChange($event)" />
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div>
+      <label class="field-label" for="borrow-out">Date borrowed</label>
+      <input id="borrow-out" class="field-input" readonly [value]="startLabel()" />
+    </div>
+    <div>
+      <label class="field-label" for="borrow-due">Due back</label>
+      <input id="borrow-due" type="date" class="field-input" [min]="minDue()" [value]="dueValue()" (change)="onDateChange($event)" />
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+@let mem = m();
+<div class="flex items-start gap-3.5">
+  <span class="grid size-14 flex-none place-items-center rounded-full bg-gold-soft font-display text-lg font-bold text-gold-deep">{{ initials() }}</span>
+  <div class="min-w-0">
+    <h3 class="m-0 font-display text-xl leading-tight">{{ mem.fullName }}</h3>
+    <p class="m-0 mt-0.5 text-ink-2 tabular-nums">{{ phone() }}</p>
+    <div class="mt-2 flex flex-wrap gap-1.5">
+      @if (mem.group) {
+        <span class="meta-chip">{{ mem.group }}</span>
+      }
+      <span class="pill" [class]="mem.active ? 'pill-ok' : 'pill-bad'">{{ mem.active ? 'Active' : 'Inactive' }}</span>
+    </div>
+  </div>
+</div>
+
+@if (!mem.active) {
+  <app-alert kind="warn">Deactivated. They don’t show up when lending and can’t borrow until they are reactivated.</app-alert>
+}
+
+<div class="grid grid-cols-4 gap-2 max-[480px]:grid-cols-2">
+  <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+    <b class="block font-display text-lg tabular-nums">{{ mem.onLoanCount }}<span class="text-[13px] font-normal text-ink-3"> / {{ maxBooks }}</span></b>
+    <span class="text-[11px] text-ink-3">books out</span>
+  </div>
+  <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+    <b class="block font-display text-lg tabular-nums" [class.text-bad]="mem.overdueCount > 0">{{ mem.overdueCount }}</b>
+    <span class="text-[11px] text-ink-3">overdue</span>
+  </div>
+  <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+    <b class="block font-display text-lg tabular-nums">{{ mem.timesBorrowed }}</b><span class="text-[11px] text-ink-3">borrowed ever</span>
+  </div>
+  <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+    <b class="block font-display text-lg tabular-nums">{{ mem.donations }}</b><span class="text-[11px] text-ink-3">{{ mem.donations === 1 ? 'donation' : 'donations' }}</span>
+  </div>
+</div>
+
+<section>
+  <h4 class="m-0 mb-2.5 text-xs tracking-[0.08em] text-ink-3 uppercase">Has now <span class="tabular-nums">({{ current().length }})</span></h4>
+  @if (current().length) {
+    <ul class="m-0 flex list-none flex-col gap-2 p-0">
+      @for (row of current(); track row.loan.transactionId) {
+        <li class="rounded-xl border border-line px-3 py-2.5" [class.border-l-[3px]]="row.state.late" [class.border-l-bad]="row.state.late">
+          <app-book-line [title]="row.loan.title" [subtitle]="row.loan.bookCode + ' · due ' + row.due">
+            <span class="pill flex-none" [class]="row.state.pill">{{ row.state.text }}</span>
+            @if (auth.can('loans.return')) {
+              <button type="button" class="btn btn-sm ml-1 flex-none" (click)="returnRequested.emit(row.loan)">Return</button>
+            }
+          </app-book-line>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="m-0 text-[12.5px] text-ink-3">No books out right now.</p>
+  }
+</section>
+
+@if (recent().length) {
+  <section>
+    <h4 class="m-0 mb-2.5 text-xs tracking-[0.08em] text-ink-3 uppercase">Recently returned</h4>
+    <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+      @for (row of recent(); track row.loan.transactionId) {
+        <li class="flex items-baseline justify-between gap-3 border-b border-line pb-1.5 text-[13px] last:border-b-0">
+          <span class="min-w-0">
+            <b class="font-semibold">{{ row.loan.title }}</b>
+            <small class="block text-[11.5px] text-ink-3 tabular-nums">{{ row.when }}</small>
+          </span>
+          <small class="flex-none text-[11.5px]" [class]="row.state.noteBad ? 'text-bad' : 'text-ink-3'">{{ row.state.note }}</small>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+@if (donations().length) {
+  <section>
+    <h4 class="m-0 mb-2.5 text-xs tracking-[0.08em] text-ink-3 uppercase">Donated</h4>
+    <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+      @for (row of donations(); track row.donation.id) {
+        <li class="border-b border-line pb-1.5 text-[13px] last:border-b-0">
+          <b class="font-semibold">{{ plural(row.donation.copies, 'book') }}</b>
+          <span class="text-ink-3"> · {{ row.when }}</span>
+          @if (row.what) {
+            <small class="block text-[11.5px] text-ink-3">{{ row.what }}</small>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}

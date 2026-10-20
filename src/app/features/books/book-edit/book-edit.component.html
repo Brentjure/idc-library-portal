@@ -1,0 +1,129 @@
+@let f = form();
+@let errors = f.errors();
+<div class="grid grid-cols-[34px_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line bg-surface-2 p-2.5">
+  <span class="mini-cover" [style.background]="cover()" aria-hidden="true"></span>
+  <div>
+    <b class="block text-[13px]">{{ copiesLabel() }}</b>
+    <small class="text-xs text-ink-3">Copy codes, condition and loans stay as they are.</small>
+  </div>
+</div>
+
+<form class="flex flex-col gap-3.5" novalidate (submit)="$event.preventDefault(); submitted.emit()">
+  <div>
+    <label class="field-label" for="book-edit-title">Title <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+    <input
+      id="book-edit-title"
+      class="field-input"
+      maxlength="255"
+      autocomplete="off"
+      [class.invalid]="!!errors.title"
+      [attr.aria-invalid]="!!errors.title"
+      [attr.aria-describedby]="errors.title ? 'book-edit-title-err' : null"
+      [value]="f.title()"
+      (input)="set('title', f.title, $event)"
+    />
+    @if (errors.title) {
+      <p class="err-msg" id="book-edit-title-err">{{ errors.title }}</p>
+    }
+  </div>
+
+  <div>
+    <label class="field-label" for="book-edit-author">Author <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+    <input
+      id="book-edit-author"
+      class="field-input"
+      maxlength="255"
+      autocomplete="off"
+      [class.invalid]="!!errors.author"
+      [attr.aria-invalid]="!!errors.author"
+      [attr.aria-describedby]="errors.author ? 'book-edit-author-err' : null"
+      [value]="f.author()"
+      (input)="set('author', f.author, $event)"
+    />
+    @if (errors.author) {
+      <p class="err-msg" id="book-edit-author-err">{{ errors.author }}</p>
+    }
+  </div>
+
+  <div>
+    <label class="field-label" for="book-edit-categoryId">Category</label>
+    <select id="book-edit-categoryId" class="field-input px-2.5" [class.invalid]="!!errors.categoryId" (change)="selectCategory($event)">
+      @for (category of categories(); track category.id) {
+        <option [value]="category.id" [selected]="category.id === f.categoryId()">{{ category.name }}</option>
+      }
+    </select>
+    @if (errors.categoryId) {
+      <p class="err-msg">{{ errors.categoryId }}</p>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div>
+      <label class="field-label" for="book-edit-isbn">ISBN <span class="opt">optional</span></label>
+      <input
+        id="book-edit-isbn"
+        class="field-input"
+        inputmode="numeric"
+        maxlength="30"
+        autocomplete="off"
+        [class.invalid]="!!errors.isbn"
+        [attr.aria-invalid]="!!errors.isbn"
+        [attr.aria-describedby]="errors.isbn ? 'book-edit-isbn-err' : null"
+        [value]="f.isbn()"
+        (input)="set('isbn', f.isbn, $event)"
+      />
+      @if (errors.isbn) {
+        <p class="err-msg" id="book-edit-isbn-err">{{ errors.isbn }}</p>
+      }
+    </div>
+    <div>
+      <label class="field-label" for="book-edit-publicationYear">Year published <span class="opt">optional</span></label>
+      <input
+        id="book-edit-publicationYear"
+        class="field-input"
+        inputmode="numeric"
+        maxlength="4"
+        autocomplete="off"
+        [class.invalid]="!!errors.publicationYear"
+        [attr.aria-invalid]="!!errors.publicationYear"
+        [attr.aria-describedby]="errors.publicationYear ? 'book-edit-year-err' : null"
+        [value]="f.year()"
+        (input)="set('publicationYear', f.year, $event)"
+      />
+      @if (errors.publicationYear) {
+        <p class="err-msg" id="book-edit-year-err">{{ errors.publicationYear }}</p>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label" for="book-edit-publisher">Publisher <span class="opt">optional</span></label>
+    <input
+      id="book-edit-publisher"
+      class="field-input"
+      maxlength="255"
+      autocomplete="off"
+      [value]="f.publisher()"
+      (input)="set('publisher', f.publisher, $event)"
+    />
+  </div>
+
+  <div>
+    <label class="field-label" for="book-edit-description">Description <span class="opt">optional</span></label>
+    <textarea
+      id="book-edit-description"
+      class="field-input h-auto min-h-24 resize-y py-2.5"
+      rows="4"
+      maxlength="2000"
+      [class.invalid]="!!errors.description"
+      [value]="f.description()"
+      (input)="set('description', f.description, $event)"
+    ></textarea>
+    @if (errors.description) {
+      <p class="err-msg">{{ errors.description }}</p>
+    }
+  </div>
+
+  <!-- Lets Enter in a field submit the form. -->
+  <button type="submit" class="hidden" tabindex="-1" aria-hidden="true"></button>
+</form>

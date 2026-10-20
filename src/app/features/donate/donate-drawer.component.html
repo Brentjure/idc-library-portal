@@ -1,0 +1,95 @@
+<app-drawer
+  headingId="donate-heading"
+  [open]="isOpen()"
+  [heading]="form.isPurchase() ? 'Add books' : 'Donate a book'"
+  [hint]="form.isPurchase() ? 'Add books the church has bought so they can be borrowed.' : 'Record books given to the library so they can be borrowed.'"
+  [icon]="form.isPurchase() ? 'bookPlus' : 'gift'"
+  (closed)="desk.close()"
+>
+  <ng-container drawerStats>
+    <span class="drawer-stat">{{ todayLabel }}</span>
+    <span class="drawer-stat">Every copy gets its own code</span>
+  </ng-container>
+
+  @if (saved(); as result) {
+    <!-- Stage 2: labelling -->
+    <app-label-codes
+      [copies]="result.copies"
+      [isPurchase]="result.source === 'PURCHASE'"
+      [donorLabel]="result.donorLabel"
+      [(labelled)]="labelled"
+    />
+  } @else {
+    <!-- Stage 1: the form -->
+    <app-step
+      [n]="1"
+      heading="Where are the books from?"
+      [subtitle]="form.isPurchase() ? 'Choose Donation if someone gave the books.' : 'Search members. Not on the list? Just type their full name.'"
+      [done]="form.donorOk()"
+    >
+      <app-donor-step [form]="form" (sourceChange)="changeSource($event)" />
+    </app-step>
+
+    <app-step [n]="2" heading="Books" [subtitle]="booksHint()" [done]="form.books().length > 0">
+      <app-choice-chips label="How to add books" [options]="addModes" [value]="addMode()" (valueChange)="changeAddMode($event)" />
+
+      @if (addMode() === 'one') {
+        <app-add-book-form [categories]="categories()" [isPurchase]="form.isPurchase()" (added)="addBooks([$event])" />
+      } @else {
+        <app-sheet-upload [categories]="categories()" [isPurchase]="form.isPurchase()" (added)="addBooks($event)" />
+      }
+
+      <app-draft-book-list
+        [books]="form.books()"
+        [errors]="form.bookErrors()"
+        [isPurchase]="form.isPurchase()"
+        (remove)="form.removeBook($event)"
+      />
+    </app-step>
+  }
+
+  <ng-container drawerFooter>
+    <div class="w-full text-xs text-ink-3" aria-live="polite">
+      @if (error()) {
+        <app-alert>{{ error() }}</app-alert>
+      } @else if (saved(); as result) {
+        @let done = labelled().size;
+        @let total = result.copies.length;
+        <app-summary-tile label="Labels" [value]="done" [caption]="'of ' + total" [title]="done < total ? total - done + ' still to label' : 'All labelled'">
+          @if (done < total) {
+            Tick each code once it is on the book
+          } @else {
+            {{ result.source === 'PURCHASE' ? 'Shelve them, then add the next batch' : 'Shelve them, then serve the next donor' }}
+          }
+        </app-summary-tile>
+      } @else if (!form.donorOk()) {
+        Enter the donor to begin
+      } @else if (!form.books().length) {
+        <b class="block text-[13.5px] text-ink">{{ form.isPurchase() ? 'Church purchase' : form.donorLabel() }}</b>Add at least one book
+      } @else {
+        <app-summary-tile
+          label="Books"
+          [value]="form.totalCopies()"
+          [caption]="form.totalCopies() === 1 ? 'copy' : 'copies'"
+          [title]="form.isPurchase() ? 'Bought by the church' : 'From ' + form.donorLabel()"
+        >
+          {{ plural(form.books().length, 'title') }} for the library
+        </app-summary-tile>
+      }
+    </div>
+
+    @if (saved(); as result) {
+      <button type="button" class="btn mr-auto max-[480px]:mr-0 max-[480px]:flex-1" [disabled]="saving()" (click)="finishLabelling(true)">
+        Finish later
+      </button>
+      <button type="button" class="btn btn-primary max-[480px]:flex-1" [disabled]="!allLabelled() || saving()" (click)="finishLabelling(false)">
+        {{ result.source === 'PURCHASE' ? 'Done · add more' : 'Done · next donor' }}
+      </button>
+    } @else {
+      <button type="button" class="btn mr-auto max-[480px]:mr-0 max-[480px]:flex-1" (click)="cancel()">Cancel</button>
+      <button type="button" class="btn btn-primary max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save()">
+        {{ saving() ? 'Saving…' : form.isPurchase() ? 'Save books' : 'Save donation' }}
+      </button>
+    }
+  </ng-container>
+</app-drawer>

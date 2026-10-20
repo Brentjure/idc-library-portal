@@ -1,0 +1,118 @@
+<app-typeahead
+  #titleField
+  label="Book title"
+  inputId="donate-title"
+  icon="book"
+  placeholder="Type the title on the cover"
+  [fetch]="searchTitles"
+  [picked]="!!match()"
+  [minChars]="2"
+  [(text)]="title"
+  (typed)="onTitleTyped()"
+  (picks)="onTitlePicked($event)"
+>
+  <ng-template #row let-book>
+    <app-book-line [title]="book.title" [subtitle]="book.author + (book.categoryName ? ' · ' + book.categoryName : '')">
+      <span class="text-[11.5px] whitespace-nowrap text-ink-3">{{ book.totalCopies }} in library</span>
+    </app-book-line>
+  </ng-template>
+  <ng-template #none>Not in the library yet. Keep typing to add it as a new title.</ng-template>
+</app-typeahead>
+
+@if (titleNote()) {
+  <div class="rounded-lg px-2.5 py-2 text-xs" [class]="match() ? 'bg-good-bg text-good' : 'border border-dashed border-line bg-surface text-ink-2'">
+    {{ titleNote() }}
+  </div>
+}
+
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <div>
+    <label class="field-label" for="donate-author">Author</label>
+    <input
+      id="donate-author"
+      class="field-input"
+      placeholder="Author's name"
+      autocomplete="off"
+      [readOnly]="!!match()"
+      [value]="author()"
+      (input)="author.set(valueOf($event))"
+    />
+  </div>
+  <div>
+    <label class="field-label" for="donate-category">Category</label>
+    <select id="donate-category" class="field-input px-2.5" [disabled]="!!match()" (change)="selectCategory($event)">
+      @for (category of categories(); track category.id) {
+        <option [value]="category.id" [selected]="category.id === categoryId()">{{ category.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+<div>
+  <label class="field-label" for="donate-isbn">ISBN <span class="opt">optional</span></label>
+  <input
+    id="donate-isbn"
+    class="field-input"
+    inputmode="numeric"
+    autocomplete="off"
+    [placeholder]="match() ? 'No ISBN recorded for this title' : '10 or 13 digits, on the back cover'"
+    [readOnly]="!!match()"
+    [value]="match() ? (match()!.isbn ?? '') : isbn()"
+    (input)="onIsbnTyped(valueOf($event))"
+  />
+  @if (!match() && isbnLookup.note(); as note) {
+    <p class="mt-1.5 text-xs" [class]="note.good ? 'text-good' : 'text-ink-3'" aria-live="polite">{{ note.text }}</p>
+  }
+</div>
+
+@if (!match()) {
+  <details class="more border-t border-dashed border-line pt-2.5" [open]="detailsOpen()" (toggle)="onDetailsToggled($event)">
+    <summary class="flex cursor-pointer list-none items-center gap-1.5 text-[12.5px] font-semibold text-ink-2">
+      More details <span class="opt">optional</span>
+    </summary>
+    <div class="mt-3 flex flex-col gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label class="field-label" for="donate-publisher">Publisher</label>
+          <input id="donate-publisher" class="field-input" autocomplete="off" [value]="publisher()" (input)="publisher.set(valueOf($event))" />
+        </div>
+        <div>
+          <label class="field-label" for="donate-year">Year published</label>
+          <input
+            id="donate-year"
+            class="field-input"
+            inputmode="numeric"
+            maxlength="4"
+            placeholder="e.g. 2015"
+            autocomplete="off"
+            [value]="year()"
+            (input)="year.set(valueOf($event))"
+          />
+        </div>
+      </div>
+    </div>
+  </details>
+}
+
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <div>
+    <label class="field-label" for="donate-copies">Copies</label>
+    <div class="stepper">
+      <button type="button" aria-label="One less copy" (click)="changeCopies(-1)">−</button>
+      <input id="donate-copies" inputmode="numeric" [value]="copies()" (change)="typeCopies($event)" />
+      <button type="button" aria-label="One more copy" (click)="changeCopies(1)">+</button>
+    </div>
+  </div>
+  <div>
+    <span class="field-label">Condition</span>
+    <app-choice-chips label="Condition" look="cards" [options]="conditions" [(value)]="condition" />
+  </div>
+</div>
+
+@if (error()) {
+  <p class="err-msg">{{ error() }}</p>
+}
+
+<button type="button" class="btn border-dashed border-gold-deep text-gold-deep enabled:hover:bg-gold-soft" [disabled]="!canAdd()" (click)="add()">
+  + Add to {{ isPurchase() ? 'this batch' : 'donation' }}
+</button>

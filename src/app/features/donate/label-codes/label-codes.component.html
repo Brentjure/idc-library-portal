@@ -1,0 +1,49 @@
+<div class="flex items-start gap-3 rounded-[14px] bg-good-bg p-3.5">
+  <span class="grid size-8 flex-none place-items-center rounded-full bg-good font-extrabold text-surface">✓</span>
+  <div>
+    <b class="block text-[14.5px]">{{ isPurchase() ? 'Books saved' : 'Donation saved' }}</b>
+    <small class="mt-0.5 block text-[12.5px] text-ink-2">
+      {{ plural(copies().length, 'copy', 'copies') }}{{ isPurchase() ? ' added to the library' : ' from ' + donorLabel() }}.
+      Write each code inside the front cover or on a spine sticker, then tick it.
+    </small>
+  </div>
+</div>
+
+<div class="flex flex-col gap-2">
+  <div class="h-2 overflow-hidden rounded-full border border-line bg-surface-2">
+    <span class="block h-full rounded-full bg-gold transition-[width] duration-200" [style.width.%]="percentDone()"></span>
+  </div>
+  <div class="flex items-center justify-between gap-2 text-[12.5px] text-ink-2">
+    <small><b class="num">{{ doneCount() }} of {{ copies().length }}</b> labelled</small>
+    @if (doneCount() < copies().length) {
+      <button type="button" class="link" (click)="markAll()">Mark all as labelled</button>
+    } @else {
+      <small class="text-good">All books are ready to shelve</small>
+    }
+  </div>
+</div>
+
+<ul class="m-0 flex list-none flex-col gap-2.5 p-0">
+  @for (group of groups(); track group.title + group.author) {
+    <li class="rounded-xl border border-line p-3">
+      <app-book-line [title]="group.title" [subtitle]="group.author + ' · ' + plural(group.copies.length, 'copy', 'copies')">
+        <div bookLineBelow class="mt-2.5 flex flex-wrap gap-2">
+          @for (copy of group.copies; track copy.copyId) {
+            @let done = labelled().has(copy.copyId);
+            <button
+              type="button"
+              class="code"
+              [class.done]="done"
+              [attr.aria-pressed]="done"
+              [attr.aria-label]="copy.bookCode + (done ? ', labelled' : ', not labelled yet')"
+              (click)="toggle(copy.copyId)"
+            >
+              <span class="tick" aria-hidden="true">{{ done ? '✓' : '' }}</span>
+              <span class="num">{{ copy.bookCode }}</span>
+            </button>
+          }
+        </div>
+      </app-book-line>
+    </li>
+  }
+</ul>

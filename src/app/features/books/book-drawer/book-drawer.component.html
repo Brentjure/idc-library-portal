@@ -1,0 +1,40 @@
+<app-drawer [open]="isOpen()" [heading]="heading()" headingId="book-drawer-heading" [hint]="hint()" icon="book" (closed)="close()">
+  @if (error()) {
+    <app-alert>{{ error() }}</app-alert>
+  }
+
+  @if (detail(); as d) {
+    @if (mode() === 'edit') {
+      <app-book-edit [form]="form" [detail]="d" [categories]="categories()" (submitted)="save()" />
+    } @else {
+      <app-book-details [detail]="d" />
+    }
+  } @else if (loading()) {
+    <p class="m-0 text-[13px] text-ink-3">Loading the book…</p>
+  }
+
+  <ng-container drawerFooter>
+    @if (detail(); as d) {
+      @if (mode() === 'edit') {
+        <button type="button" class="btn mr-auto" [disabled]="saving()" (click)="cancelEdit()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+          {{ saving() ? 'Saving…' : 'Save changes' }}
+        </button>
+      } @else {
+        @if (auth.can('books.delete')) {
+          <button type="button" class="btn btn-danger" (click)="deleteRequested.emit(d)"><app-icon name="trash" [size]="15" />Delete</button>
+        }
+        @if (auth.can('books.edit')) {
+          <button type="button" class="btn btn-edit" (click)="edit()"><app-icon name="pen" [size]="15" />Edit</button>
+        }
+        @if (auth.can('loans.borrow')) {
+          <button type="button" class="btn btn-primary ml-auto" [disabled]="!d.book.availableCopies" (click)="borrowRequested.emit(d.book)">
+            {{ d.book.availableCopies ? 'Borrow this book' : 'All copies out' }}
+          </button>
+        }
+      }
+    } @else {
+      <button type="button" class="btn ml-auto" (click)="close()">Close</button>
+    }
+  </ng-container>
+</app-drawer>

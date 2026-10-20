@@ -1,0 +1,106 @@
+<div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-2">
+  @if (series().length > 1) {
+    @for (s of series(); track s.name) {
+      <span class="flex items-center gap-1.5"><i class="size-2.5 rounded-[3px]" [style.background]="s.color"></i>{{ s.name }}</span>
+    }
+  }
+  <button type="button" class="link ml-auto text-xs" [attr.aria-pressed]="showTable()" (click)="showTable.set(!showTable())">
+    {{ showTable() ? 'Show as chart' : 'Show as table' }}
+  </button>
+</div>
+
+@if (showTable()) {
+  <div class="overflow-x-auto">
+    <table class="tbl">
+      <caption class="sr-only">{{ label() }}</caption>
+      <thead>
+        <tr>
+          <th>Period</th>
+          @for (s of series(); track s.name) {
+            <th class="text-right">{{ s.name }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (g of groups(); track $index) {
+          <tr>
+            <td class="py-2">{{ g.title }}</td>
+            @for (v of g.values; track $index) {
+              <td class="py-2 text-right tabular-nums">{{ v }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div class="relative flex gap-2" role="img" [attr.aria-label]="label() + '. Use Show as table for the numbers.'">
+    <!-- Y axis: clean ticks, recessive -->
+    <div class="relative w-6 flex-none text-right text-[11px] leading-none text-ink-3 tabular-nums" [style.height.px]="height()" aria-hidden="true">
+      @for (t of tickLabels(); track $index; let i = $index, count = $count) {
+        <span class="absolute right-0 -translate-y-1/2" [style.top.%]="count > 1 ? (i / (count - 1)) * 100 : 0">{{ t }}</span>
+      }
+    </div>
+
+    <div class="relative min-w-0 flex-1">
+      <!-- Hairline gridlines -->
+      <div class="pointer-events-none absolute inset-x-0 top-0 flex flex-col justify-between" [style.height.px]="height()" aria-hidden="true">
+        @for (t of ticks(); track $index) {
+          <div class="h-px bg-line"></div>
+        }
+      </div>
+
+      <div class="relative flex items-end" [style.height.px]="height()">
+        @for (g of groups(); track $index; let i = $index) {
+          <div
+            class="group relative flex h-full flex-1 cursor-default items-end justify-center gap-0.5 outline-none focus-visible:bg-surface-2"
+            tabindex="0"
+            [attr.aria-label]="g.title + ': ' + g.values.join(', ')"
+            (mouseenter)="active.set(i)"
+            (mouseleave)="active.set(null)"
+            (focus)="active.set(i)"
+            (blur)="active.set(null)"
+          >
+            @if (active() === i) {
+              <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ink-3/30"></div>
+            }
+            @for (v of g.values; track $index; let s = $index) {
+              <div
+                class="min-w-[3px] flex-1 rounded-t-[4px]"
+                [style.max-width.px]="barWidth"
+                [style.height.%]="heightOf(v)"
+                [style.background]="series()[s]?.color"
+              ></div>
+            }
+            @if (active() === i) {
+              <div
+                class="pointer-events-none absolute bottom-full z-10 mb-2 min-w-[130px] rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-pop"
+                [class]="i > groups().length / 2 ? 'right-0' : 'left-0'"
+                role="tooltip"
+              >
+                <b class="mb-1 block text-ink">{{ g.title }}</b>
+                @for (s of series(); track s.name; let si = $index) {
+                  <span class="flex items-center gap-1.5 text-ink-2">
+                    <i class="size-2 rounded-[2px]" [style.background]="s.color"></i>{{ s.name }}
+                    <b class="ml-auto pl-3 text-ink tabular-nums">{{ g.values[si] }}</b>
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- X labels, a few only when there are many groups -->
+      <div class="flex h-5 items-end text-[11px] text-ink-3" aria-hidden="true">
+        @for (g of groups(); track $index; let i = $index) {
+          <span class="flex-1 truncate text-center">{{ i % labelEvery() === 0 ? g.label : '' }}</span>
+        }
+      </div>
+
+      @if (empty()) {
+        <p class="absolute inset-x-0 top-1/3 m-0 text-center text-[13px] text-ink-3">Nothing in this period.</p>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,60 @@
+@reference "../../../../styles.css";
+
+:host {
+  display: contents;
+}
+
+.nav-item {
+  @apply flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-[10px] border-0 bg-transparent px-3 py-2 text-left font-medium whitespace-nowrap text-ink-2 no-underline hover:bg-surface-2 hover:text-ink;
+}
+.nav-item.active {
+  @apply bg-gold font-semibold text-on-gold hover:bg-gold hover:text-on-gold;
+}
+.nav-item.soon {
+  @apply cursor-default text-ink-3 hover:bg-transparent hover:text-ink-3;
+}
+.nav-item .count {
+  @apply ml-auto rounded-full bg-bad-bg px-2 py-px text-[11px] font-bold text-bad;
+}
+.nav-item .soon-tag {
+  @apply ml-auto rounded-full bg-surface-2 px-1.5 text-[9.5px] font-semibold tracking-wide text-ink-3 uppercase;
+}
+
+/* Slim (icons only) on desktop */
+@media (min-width: 861px) {
+  .side.slim .brand {
+    flex-direction: column;
+  }
+  .side.slim .collapse {
+    margin: 0;
+  }
+  .side.slim :is(.brand-text, .nav-label, .nav-item > span, .verse, .me-text) {
+    display: none;
+  }
+  .side.slim .nav-item {
+    justify-content: center;
+    padding: 10px;
+  }
+  .side.slim .me {
+    justify-content: center;
+    border: 0;
+  }
+}
+
+/* The sidebar never scrolls, so tighten it on short screens */
+@media (max-height: 760px) {
+  .verse {
+    display: none;
+  }
+  .nav-item {
+    padding-block: 7px;
+  }
+}
+@media (max-height: 640px) {
+  .nav-label {
+    display: none;
+  }
+  .nav-item {
+    padding-block: 6px;
+  }
+}

@@ -1,0 +1,107 @@
+<app-drawer
+  heading="Return books"
+  headingId="return-heading"
+  hint="Check books back in as members hand them over."
+  icon="returnIn"
+  [open]="isOpen()"
+  (closed)="desk.close()"
+>
+  <ng-container drawerStats>
+    <span class="drawer-stat"><b class="num">{{ summary.summary()?.returnedToday ?? 0 }}</b> checked in today</span>
+    <span class="drawer-stat">{{ todayLabel }}</span>
+  </ng-container>
+
+  <!-- 1. Who is returning -->
+  <app-step
+    [n]="1"
+    heading="Who is returning?"
+    subtitle="Find the member, or search the book if you don't know who borrowed it"
+    [done]="!!form.borrower()"
+  >
+    <app-choice-chips label="Find by" [options]="findByOptions" [value]="findBy()" (valueChange)="changeFindBy($event)" />
+
+    @if (findBy() === 'member') {
+      <app-member-picker idPrefix="return" [member]="pickedMember()" (memberChange)="onMemberPicked($event)" />
+    } @else {
+      <app-typeahead
+        #bookField
+        label="Book title or code"
+        inputId="return-book"
+        icon="book"
+        placeholder="Title, or the code inside the cover"
+        [fetch]="searchLoans"
+        [picked]="!!form.borrower()"
+        [(text)]="bookSearchText"
+        (typed)="form.reset()"
+        (picks)="onLoanPicked($event)"
+      >
+        <ng-template #row let-loan>
+          <app-book-line [title]="loan.title" [subtitle]="loan.bookCode + ' · ' + loan.memberName">
+            @let due = dueState(loan.dueDate);
+            <span class="pill" [class]="due.pillClass">{{ due.text }}</span>
+          </app-book-line>
+        </ng-template>
+        <ng-template #none let-text>No book on loan matches “{{ text }}”.</ng-template>
+      </app-typeahead>
+
+      @if (form.borrower(); as borrower) {
+        <div class="flex flex-wrap gap-1.5">
+          <span class="meta-chip">Borrowed by {{ borrower.name }}</span>
+          @if (borrower.phone) {
+            <span class="meta-chip">{{ formatPhone(borrower.phone) }}</span>
+          }
+        </div>
+      }
+    }
+  </app-step>
+
+  <!-- 2. Books handed back -->
+  <app-step [n]="2" heading="Books handed back" [subtitle]="listHint()" [done]="form.canSave()">
+    @if (form.loans().length > 1) {
+      <button stepAside type="button" class="link ml-auto text-[12.5px]" (click)="form.toggleAll()">
+        {{ form.allChosen() ? 'Clear all' : 'Select all' }}
+      </button>
+    }
+
+    @if (!form.borrower()) {
+      <app-empty-state>Their books on loan will be listed here.</app-empty-state>
+    } @else if (loading()) {
+      <app-empty-state>Looking up their loans…</app-empty-state>
+    } @else if (!form.loans().length) {
+      <app-empty-state>{{ form.borrower()!.name }} has no books on loan.</app-empty-state>
+    } @else {
+      <app-loan-checklist
+        [loans]="form.loans()"
+        [selected]="form.selected()"
+        (toggled)="form.toggle($event)"
+        (conditionChanged)="form.setCondition($event.loan, $event.condition)"
+      />
+    }
+  </app-step>
+
+  <ng-container drawerFooter>
+    <div class="w-full text-xs text-ink-3" aria-live="polite">
+      @if (error()) {
+        <app-alert>{{ error() }}</app-alert>
+      } @else if (!form.borrower()) {
+        Find the member to begin
+      } @else if (!form.canSave()) {
+        <b class="block text-[13.5px] text-ink">{{ form.borrower()!.name }}</b>Tick at least one book
+      } @else {
+        @let count = form.chosen().length;
+        <app-summary-tile label="Back" [value]="count" [caption]="count === 1 ? 'book' : 'books'" [title]="count + ' from ' + form.firstName()">
+          @if (form.lateCount()) {
+            <span class="text-bad">{{ form.lateCount() }} returned late</span>
+          } @else {
+            All on time
+          }
+        </app-summary-tile>
+      }
+    </div>
+    <button type="button" class="btn mr-auto max-[480px]:mr-0 max-[480px]:flex-1" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save(false)">Save &amp; close</button>
+    <button type="button" class="btn btn-primary max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save(true)">
+      {{ saving() ? 'Saving…' : 'Save & next member' }}
+    </button>
+  </ng-container>
+</app-drawer>

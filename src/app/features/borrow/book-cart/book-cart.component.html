@@ -1,0 +1,11 @@
+<ul class="m-0 flex list-none flex-col gap-2 p-0" aria-label="Books to hand over">
+  @for (book of books(); track book.id) {
+    <li class="rounded-xl border border-line py-2 pr-2 pl-2.5">
+      <app-book-line [title]="book.title" [subtitle]="book.author">
+        <button type="button" class="remove-x" [attr.aria-label]="'Remove ' + book.title" (click)="remove.emit(book)">×</button>
+      </app-book-line>
+    </li>
+  } @empty {
+    <li><app-empty-state icon="book">{{ emptyText() }}</app-empty-state></li>
+  }
+</ul>

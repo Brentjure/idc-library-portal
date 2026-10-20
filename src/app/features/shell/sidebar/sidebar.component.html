@@ -1,0 +1,83 @@
+<aside
+  class="side fixed inset-y-0 left-0 z-50 flex h-dvh w-[260px] flex-col gap-1 overflow-hidden border-r border-line bg-surface px-3.5 py-4 transition-transform duration-200 min-[861px]:sticky min-[861px]:top-0 min-[861px]:w-auto min-[861px]:translate-x-0"
+  aria-label="Main navigation"
+  [class.-translate-x-full]="!mobileOpen()"
+  [class.slim]="slim()"
+>
+  <div class="brand flex items-center gap-2.5 px-1.5 pt-0.5 pb-2">
+    <img src="logo.jpg" alt="IDC JKUAT logo" class="size-10 flex-none rounded-[10px] bg-white object-contain p-0.5 ring-1 ring-line" />
+    <span class="brand-text min-w-0">
+      <b class="block font-display text-[17px] leading-tight whitespace-nowrap">IDC JKUAT</b>
+      <small class="text-xs text-ink-3">Church Library</small>
+    </span>
+    <button
+      type="button"
+      class="collapse ml-auto hidden cursor-pointer rounded-md p-1 text-ink-3 hover:text-ink min-[861px]:block"
+      [attr.aria-label]="slim() ? 'Expand sidebar' : 'Collapse sidebar'"
+      (click)="toggleSlim.emit()"
+    >
+      <app-icon name="sidebar" />
+    </button>
+  </div>
+
+  <nav class="flex flex-col">
+    @for (section of sections(); track section.label) {
+      <div class="nav-label px-3 pt-2.5 pb-1 text-[10.5px] tracking-[0.09em] whitespace-nowrap text-ink-3 uppercase">{{ section.label }}</div>
+
+      @for (item of section.items; track item.label) {
+        @if (item.link) {
+          <a
+            class="nav-item"
+            routerLinkActive="active"
+            [routerLink]="item.link"
+            [queryParams]="item.query ?? null"
+            [routerLinkActiveOptions]="exactMatch"
+            [attr.title]="slim() ? item.label : null"
+            (click)="closeMobile.emit()"
+          >
+            <app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+            @if (item.showsOverdue && overdue()) {
+              <span class="count num">{{ overdue() }}</span>
+            }
+          </a>
+        } @else if (item.opens) {
+          <button type="button" class="nav-item" [attr.title]="slim() ? item.label : null" (click)="openDonate(item.opens)">
+            <app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+          </button>
+        } @else {
+          <span class="nav-item soon" aria-disabled="true" [attr.title]="item.label + ': coming soon'">
+            <app-icon [name]="item.icon" /><span>{{ item.label }}</span>
+            @if (item.showsOverdue && overdue()) {
+              <span class="count num">{{ overdue() }}</span>
+            } @else {
+              <span class="soon-tag">Soon</span>
+            }
+          </span>
+        }
+      }
+    }
+  </nav>
+
+  <div class="mt-auto flex flex-col gap-2 pt-2">
+    <div class="verse rounded-xl bg-gold-soft px-3 py-2.5 text-xs">
+      <p class="m-0 mb-1 italic">“Make disciples of all nations.”</p>
+      <span class="font-semibold text-ink-2">Matthew 28:19</span>
+    </div>
+    <div class="me flex items-center gap-1 rounded-xl border border-line px-2.5 py-2">
+      <app-member-line class="me-text" [name]="auth.user()?.name ?? ''" [subtitle]="roleLabel()" />
+      <button
+        type="button"
+        class="grid size-8 flex-none cursor-pointer place-items-center rounded-lg text-ink-3 hover:bg-bad-bg hover:text-bad"
+        aria-label="Sign out"
+        title="Sign out"
+        (click)="auth.signOut()"
+      >
+        <app-icon name="logout" [size]="17" />
+      </button>
+    </div>
+  </div>
+</aside>
+
+@if (mobileOpen()) {
+  <div class="fixed inset-0 z-40 bg-[rgb(20_18_10/0.35)] min-[861px]:hidden" (click)="closeMobile.emit()"></div>
+}

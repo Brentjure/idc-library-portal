@@ -1,0 +1,9 @@
+/* Sidebar column next to the page on desktop; narrower when the sidebar is slim. */
+@media (min-width: 861px) {
+  .layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+  .layout.slim {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+}

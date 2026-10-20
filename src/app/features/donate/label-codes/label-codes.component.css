@@ -1,0 +1,21 @@
+@reference "../../../../styles.css";
+
+/* A code shaped like a luggage tag, ticked once it is written in the book */
+.code {
+  @apply relative inline-flex cursor-pointer items-center gap-2 rounded-l-lg rounded-r border-[1.5px] border-ink-3 bg-surface py-1.5 pr-5 pl-2.5 text-[13px] font-bold tracking-[0.04em];
+}
+.code::after {
+  @apply absolute top-1/2 right-1.5 -mt-[2.5px] size-[5px] rounded-full border-[1.5px] border-ink-3 content-[''];
+}
+.code .tick {
+  @apply grid size-4 place-items-center rounded border-[1.5px] border-ink-3 text-[11px] leading-none;
+}
+.code.done {
+  @apply border-gold-deep bg-gold-soft;
+}
+.code.done::after {
+  @apply border-gold-deep;
+}
+.code.done .tick {
+  @apply border-gold bg-gold text-on-gold;
+}

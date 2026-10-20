@@ -1,0 +1,34 @@
+<button
+  type="button"
+  class="grid size-10 cursor-pointer place-items-center rounded-[10px] border border-line bg-surface min-[861px]:hidden"
+  aria-label="Open menu"
+  (click)="openMenu.emit()"
+>
+  <app-icon name="menu" />
+</button>
+
+<div class="min-w-0">
+  <h1 class="m-0 font-display text-[26px] leading-tight font-bold">{{ title() }}</h1>
+  <p class="mt-0.5 mb-0 text-[13px] text-ink-2">{{ subtitle }}</p>
+</div>
+
+<div class="ml-auto flex flex-wrap items-center gap-2.5 max-[600px]:w-full">
+  <button type="button" class="icon-btn hover:border-bad-bg hover:bg-bad-bg hover:text-bad" aria-label="Sign out" title="Sign out" (click)="auth.signOut()">
+    <app-icon name="logout" />
+  </button>
+  @if (auth.can('loans.return')) {
+    <button type="button" class="btn max-[600px]:flex-1" aria-label="Return books" (click)="desk.openReturn()">
+      <app-icon name="returnIn" /><span class="max-[420px]:hidden">Return books</span>
+    </button>
+  }
+  @if (auth.can('donations.record')) {
+    <button type="button" class="btn max-[600px]:flex-1" aria-label="Donate a book" (click)="desk.openDonate('DONATION')">
+      <app-icon name="gift" /><span class="max-[420px]:hidden">Donate a book</span>
+    </button>
+  }
+  @if (auth.can('loans.borrow')) {
+    <button type="button" class="btn btn-primary max-[600px]:flex-1" aria-label="Borrow books" (click)="desk.openBorrow()">
+      <app-icon name="bookOpen" /><span class="max-[420px]:hidden">Borrow books</span>
+    </button>
+  }
+</div>

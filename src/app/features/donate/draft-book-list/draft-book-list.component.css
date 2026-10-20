@@ -1,0 +1,9 @@
+@reference "../../../../styles.css";
+
+/* Small facts under a book: "2 copies", "Good", "New title" */
+.tag {
+  @apply rounded-[5px] border border-line bg-surface-2 px-1.5 py-px text-[10.5px] font-semibold text-ink-2;
+}
+.tag.new {
+  @apply border-transparent bg-gold-soft text-gold-deep;
+}

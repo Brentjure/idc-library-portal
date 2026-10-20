@@ -1,0 +1,28 @@
+<div class="card">
+  <h2 class="m-0 mb-3.5 font-display text-base font-bold">Needs attention</h2>
+  <ul class="m-0 flex list-none flex-col gap-3 p-0">
+    <li class="flex items-start gap-3">
+      <span class="grid size-[30px] flex-none place-items-center rounded-full bg-bad-bg text-bad"><app-icon name="clock" [size]="15" /></span>
+      <div>
+        <b class="block text-[13px]">{{ plural(overdue(), 'book') }} overdue</b>
+        <small class="text-[11.5px] text-ink-3">Remind members when they come to the desk.</small>
+      </div>
+    </li>
+    <li class="flex items-start gap-3">
+      <span class="grid size-[30px] flex-none place-items-center rounded-full bg-gold-soft text-gold-deep"><app-icon name="tag" [size]="15" /></span>
+      <div>
+        <b class="block text-[13px]">{{ plural(unlabelled(), 'copy', 'copies') }} without a label</b>
+        <small class="text-[11.5px] text-ink-3">Write the code inside the cover before shelving.</small>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="card bg-gold-soft">
+  <h2 class="m-0 mb-2 font-display text-base font-bold">At the desk</h2>
+  <ul class="m-0 flex list-disc flex-col gap-1.5 pl-4 text-[12.5px] text-ink-2">
+    <li>Use <b>Save &amp; next member</b> to keep the drawer open for the queue.</li>
+    <li>Damaged returns stay off the shelf until they are repaired.</li>
+    <li>Every donated copy gets a code. Tick it once it is written in the book.</li>
+  </ul>
+</div>

@@ -1,0 +1,198 @@
+@import 'tailwindcss';
+
+/* IDC JKUAT Library: light mode only, church yellow. Values from docs/HANDOFF.md §2. */
+@theme {
+  --color-bg: #f6f6f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8f7f2;
+  --color-line: #ecebe4;
+  --color-ink: #1f1d16;
+  --color-ink-2: #615d50;
+  --color-ink-3: #9a9585;
+  --color-gold: #f5b700;
+  --color-gold-deep: #c98f00;
+  --color-gold-soft: #fff4cc;
+  --color-on-gold: #2a2203;
+  --color-good: #1e8e5a;
+  --color-good-bg: #e5f5ec;
+  --color-warn: #b86e00;
+  --color-warn-bg: #fff1da;
+  --color-bad: #c2412d;
+  --color-bad-bg: #fce8e3;
+  /* Chart series, checked with the dataviz validator on white (contrast, colour-blind separation).
+     The brand yellow is too light for marks on white, so series 1 is a deeper gold. */
+  --color-chart-1: #b07d00;
+  --color-chart-2: #2e6db4;
+
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(30 28 20 / 0.04), 0 6px 20px -14px rgb(30 28 20 / 0.14);
+  --shadow-pop: 0 16px 32px -16px rgb(0 0 0 / 0.3);
+  --shadow-drawer: -24px 0 48px -24px rgb(0 0 0 / 0.35);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/*
+ * ---------- Shared building blocks ----------
+ * Only classes used by several components live here. A class used by one component belongs in that
+ * component's .css file (start it with: @reference "<relative path>/styles.css";).
+ */
+@layer components {
+  .card {
+    @apply min-w-0 rounded-2xl border border-line bg-surface p-[18px] shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 font-semibold whitespace-nowrap transition hover:border-gold-deep disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-line;
+  }
+  .btn-primary {
+    @apply border-gold bg-gold text-on-gold hover:border-gold hover:brightness-95 disabled:hover:brightness-100;
+  }
+  .btn-sm {
+    @apply h-[34px] rounded-[10px] px-3 text-[12.5px];
+  }
+  .btn-edit {
+    @apply border-good-bg bg-good-bg text-good hover:border-good;
+  }
+  .btn-danger {
+    @apply text-bad hover:border-bad-bg hover:bg-bad-bg;
+  }
+
+  .link {
+    @apply cursor-pointer border-0 bg-transparent p-0 font-bold text-gold-deep hover:underline;
+  }
+
+  .icon-btn {
+    @apply relative grid size-[42px] cursor-pointer place-items-center rounded-full border border-line bg-surface text-ink-2 hover:text-ink;
+  }
+
+  /* Form fields */
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold text-ink-2;
+  }
+  .field-input {
+    @apply h-10 w-full rounded-[10px] border border-line bg-surface px-3 text-ink outline-none transition placeholder:text-ink-3 focus:border-gold-deep focus:ring-[3px] focus:ring-gold-soft disabled:bg-surface-2 disabled:text-ink-2 read-only:bg-surface-2 read-only:text-ink-2;
+  }
+  .field-input.picked {
+    @apply border-gold bg-gold-soft;
+  }
+  .field-input.invalid {
+    @apply border-bad ring-[3px] ring-bad-bg;
+  }
+  .opt {
+    @apply ml-1 rounded-full border border-line bg-surface-2 px-[7px] text-[11px] font-medium text-ink-3;
+  }
+  .err-msg {
+    @apply mt-1 text-xs text-bad;
+  }
+  .hint {
+    @apply mt-0.5 text-xs text-ink-3;
+  }
+
+  /* Segmented control */
+  .seg {
+    @apply flex rounded-[10px] border border-line bg-surface-2 p-[3px];
+  }
+  .seg > button {
+    @apply flex-1 cursor-pointer rounded-lg border-0 bg-transparent px-3 py-[5px] text-[12.5px] font-semibold whitespace-nowrap text-ink-2;
+  }
+  .seg > button[aria-pressed='true'] {
+    @apply bg-surface text-ink shadow-card;
+  }
+
+  /* Status pill with a dot */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-[11.5px] font-bold whitespace-nowrap before:size-1.5 before:rounded-full before:bg-current before:content-[''];
+  }
+  .pill-loan {
+    @apply bg-warn-bg text-warn;
+  }
+  .pill-ok {
+    @apply bg-good-bg text-good;
+  }
+  .pill-bad {
+    @apply bg-bad-bg text-bad;
+  }
+  .pill-gold {
+    @apply bg-gold-soft text-gold-deep;
+  }
+
+  /* Initials avatar */
+  .avatar {
+    @apply grid size-[30px] flex-none place-items-center rounded-full bg-gold-soft text-[11px] font-bold text-gold-deep;
+  }
+
+  /* Small coloured book spine */
+  .mini-cover {
+    @apply h-11 w-[34px] flex-none rounded-[5px] shadow-[inset_3px_0_0_rgb(0_0_0/0.2)];
+  }
+
+  /* Rounded facts under a member, e.g. "Choir", "2 books already on loan" */
+  .meta-chip {
+    @apply rounded-full border border-line bg-surface-2 px-2.5 py-[3px] text-xs text-ink-2;
+  }
+
+  /* Small facts under a drawer title, e.g. "3 borrowed today" */
+  .drawer-stat {
+    @apply rounded-full border border-line bg-surface px-2.5 py-[3px] text-[11.5px] text-ink-2;
+  }
+  .drawer-stat b {
+    @apply text-ink;
+  }
+
+  /* × button that removes a row (also closes drawers) */
+  .remove-x {
+    @apply size-[30px] flex-none cursor-pointer rounded-lg text-xl leading-none text-ink-3 hover:bg-surface-2 hover:text-ink;
+  }
+
+  /* Tables */
+  .tbl {
+    @apply w-full border-collapse text-[13px];
+  }
+  .tbl th {
+    @apply border-b border-line bg-surface-2 p-2 text-left text-[11px] font-semibold tracking-[0.06em] whitespace-nowrap text-ink-3 uppercase first:rounded-l-lg last:rounded-r-lg;
+  }
+  .tbl td {
+    @apply border-b border-line px-2 py-3 align-middle;
+  }
+  .tbl tbody tr {
+    @apply hover:bg-surface-2;
+  }
+  .tbl tbody tr:last-child td {
+    @apply border-b-0;
+  }
+}

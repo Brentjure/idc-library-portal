@@ -1,0 +1,5 @@
+# Cloudflare Pages: the built portal plus functions/ (the /idc-library proxy to the backend).
+# BACKEND_URL is set in the Pages project settings, not here.
+name = "idc-library"
+pages_build_output_dir = "dist/library-portal/browser"
+compatibility_date = "2026-05-01"

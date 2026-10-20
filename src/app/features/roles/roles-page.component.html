@@ -1,0 +1,153 @@
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <p class="m-0 text-[13px] text-ink-2">Create roles, then switch on what each role is allowed to do. Give users a role on the Users page.</p>
+  <button type="button" class="btn btn-primary btn-sm" (click)="add()"><app-icon name="plus" [size]="14" />New role</button>
+</div>
+
+@if (error()) {
+  <app-alert>{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></app-alert>
+}
+
+<div class="grid items-start gap-[18px] min-[901px]:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
+  <section class="card p-3" aria-labelledby="roles-heading">
+    <h2 id="roles-heading" class="m-0 mb-2 px-1.5 font-display text-base font-bold">Roles</h2>
+    @if (loading()) {
+      <p class="m-0 px-1.5 text-[13px] text-ink-3">Loading…</p>
+    }
+    <div class="flex flex-col gap-1" role="listbox" aria-label="Roles">
+      @for (role of roles(); track role.id) {
+        <button
+          type="button"
+          role="option"
+          class="flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] border px-3 py-2.5 text-left"
+          [class]="selected()?.id === role.id ? 'border-gold bg-gold-soft' : 'border-transparent bg-transparent hover:bg-surface-2'"
+          [attr.aria-selected]="selected()?.id === role.id"
+          (click)="select(role)"
+        >
+          <span class="min-w-0 flex-1">
+            <b class="flex items-center gap-1.5 text-[13.5px]">
+              {{ roleLabel(role.name) }}
+              @if (role.system) {
+                <app-icon name="lock" [size]="13" class="text-ink-3" />
+              }
+            </b>
+            <small class="text-[11.5px] text-ink-3">
+              {{ plural(role.users, 'user') }} · {{ role.system ? 'every permission' : plural(role.permissionIds.length, 'permission') }}
+            </small>
+          </span>
+        </button>
+      }
+    </div>
+  </section>
+
+  @if (selected(); as role) {
+    <section class="card relative pb-0" aria-labelledby="role-detail-heading">
+      <div class="mb-1 flex flex-wrap items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <h2 id="role-detail-heading" class="m-0 font-display text-lg font-bold">{{ roleLabel(role.name) }}</h2>
+          @if (role.description) {
+            <p class="mt-0.5 mb-0 text-[13px] text-ink-2">{{ role.description }}</p>
+          }
+        </div>
+        @if (!role.system) {
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-sm btn-edit" (click)="rename(role)"><app-icon name="pen" [size]="14" />Rename</button>
+            <button type="button" class="btn btn-sm btn-danger" (click)="askDelete(role)"><app-icon name="trash" [size]="14" />Delete</button>
+          </div>
+        }
+      </div>
+      <p class="hint mb-3">
+        @if (form.locked()) {
+          Administrator always has every permission, including new ones. It can’t be changed, renamed or deleted.
+        } @else {
+          {{ form.count() }} of {{ permissions().length }} permissions switched on · {{ plural(role.users, 'user') }} with this role
+        }
+      </p>
+
+      <div class="flex flex-col gap-4 pb-4">
+        @for (section of sections(); track section.name) {
+          @let state = form.sectionState(section);
+          <fieldset class="m-0 rounded-xl border border-line p-0">
+            <legend class="sr-only">{{ section.name }}</legend>
+            <div class="flex items-center justify-between gap-3 rounded-t-xl border-b border-line bg-surface-2 px-3.5 py-2">
+              <b class="text-xs tracking-[0.08em] text-ink-2 uppercase">{{ section.name }}</b>
+              @if (!form.locked()) {
+                <button type="button" class="link text-xs" (click)="form.toggleSection(section)">
+                  {{ state === 'all' ? 'Clear all' : 'Select all' }}
+                </button>
+              }
+            </div>
+            @for (p of section.permissions; track p.id) {
+              <label
+                class="flex items-start gap-3 border-b border-line px-3.5 py-2.5 last:border-b-0"
+                [class.cursor-pointer]="!form.locked()"
+                [for]="'perm-' + p.id"
+              >
+                <input
+                  type="checkbox"
+                  class="mt-0.5 size-4 flex-none accent-gold-deep"
+                  [id]="'perm-' + p.id"
+                  [checked]="form.isOn(p.id)"
+                  [disabled]="form.locked()"
+                  (change)="form.toggle(p.id)"
+                />
+                <span class="min-w-0 flex-1">
+                  <b class="block text-[13.5px] font-semibold">{{ p.label }}</b>
+                  @if (p.description) {
+                    <small class="block text-xs text-ink-2">{{ p.description }}</small>
+                  }
+                </span>
+                <code class="flex-none rounded border border-line bg-surface-2 px-1.5 py-0.5 text-[11px] text-ink-3 max-[600px]:hidden">{{ p.key }}</code>
+              </label>
+            }
+          </fieldset>
+        }
+      </div>
+
+      @if (form.dirty()) {
+        <div class="sticky bottom-0 -mx-[18px] flex flex-wrap items-center gap-2.5 rounded-b-2xl border-t border-line bg-surface px-[18px] py-3 shadow-[0_-8px_20px_-16px_rgb(0_0_0/0.4)]">
+          <span class="mr-auto text-[13px] text-ink-2">
+            Unsaved: {{ form.added() ? form.added() + ' switched on' : '' }}{{ form.added() && form.removed() ? ', ' : '' }}{{ form.removed() ? form.removed() + ' switched off' : '' }}
+          </span>
+          <button type="button" class="btn btn-sm" [disabled]="saving()" (click)="form.discard()">Discard</button>
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save permissions' }}</button>
+        </div>
+      }
+    </section>
+  }
+</div>
+
+<app-role-drawer [request]="drawerRequest()" [roles]="roles()" (closed)="drawerRequest.set(null)" (saved)="onSaved($event)" />
+
+<app-confirm-dialog
+  [open]="pendingRole() !== null"
+  heading="Discard your changes?"
+  tone="warn"
+  confirmLabel="Discard changes"
+  cancelLabel="Keep editing"
+  (confirmed)="discardAndSwitch()"
+  (cancelled)="pendingRole.set(null)"
+>
+  <p>You switched permissions on or off for {{ roleLabel(selected()?.name) }} without saving. They will be lost.</p>
+</app-confirm-dialog>
+
+@if (deleting(); as d) {
+  <app-confirm-dialog
+    [open]="true"
+    [heading]="d.users ? 'This role can’t be deleted yet' : 'Delete the ' + roleLabel(d.name) + ' role?'"
+    [tone]="d.users ? 'warn' : 'danger'"
+    [confirmLabel]="d.users ? '' : 'Yes, delete'"
+    [cancelLabel]="d.users ? 'OK' : 'Cancel'"
+    [busy]="saving()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleting.set(null)"
+  >
+    @if (deleteError()) {
+      <app-alert class="mb-2.5">{{ deleteError() }}</app-alert>
+    }
+    @if (d.users) {
+      <p>{{ plural(d.users, 'user') }} {{ d.users === 1 ? 'has' : 'have' }} this role. Give {{ d.users === 1 ? 'them' : 'each of them' }} another role on the Users page first.</p>
+    } @else {
+      <p>Nobody has this role, so nothing else changes. This can’t be undone.</p>
+    }
+  </app-confirm-dialog>
+}

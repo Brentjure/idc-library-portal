@@ -1,0 +1,45 @@
+@switch (look()) {
+  @case ('segmented') {
+    <div class="seg" role="group" [attr.aria-label]="label()">
+      @for (option of options(); track option.label) {
+        <button type="button" [attr.aria-pressed]="option.value === value()" (click)="value.set(option.value)">
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  }
+  @case ('cards') {
+    <div class="grid gap-2" role="group" [attr.aria-label]="label()" [style.grid-template-columns]="'repeat(' + options().length + ', minmax(0, 1fr))'">
+      @for (option of options(); track option.label) {
+        <button
+          type="button"
+          class="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl border px-2 py-2.5 text-[12.5px] font-semibold"
+          [class]="buttonClass(option)"
+          [attr.aria-pressed]="option.value === value()"
+          (click)="value.set(option.value)"
+        >
+          <b class="text-[13px]">{{ option.label }}</b>
+          @if (option.hint) {
+            <small class="text-[11px] font-medium opacity-70">{{ option.hint }}</small>
+          }
+        </button>
+      }
+    </div>
+  }
+  @case ('pills') {
+    <div class="flex flex-wrap items-center gap-1.5" role="group" [attr.aria-label]="label()">
+      <ng-content />
+      @for (option of options(); track option.label) {
+        <button
+          type="button"
+          class="cursor-pointer rounded-full border px-2.5 py-[3px] text-xs font-semibold"
+          [class]="buttonClass(option)"
+          [attr.aria-pressed]="option.value === value()"
+          (click)="value.set(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  }
+}

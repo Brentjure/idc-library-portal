@@ -1,0 +1,81 @@
+@let b = book();
+<div class="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-4 max-[480px]:grid-cols-[84px_minmax(0,1fr)]">
+  <div
+    class="flex aspect-[2/3] w-full flex-col justify-between rounded-lg px-2 py-2.5 text-[#FFF8E1] shadow-[inset_6px_0_0_rgb(0_0_0/0.18),0_8px_16px_-10px_rgb(0_0_0/0.5)]"
+    [style.background]="cover()"
+    aria-hidden="true"
+  >
+    <small class="text-[9px] tracking-[0.08em] uppercase opacity-85">{{ b.author }}</small>
+    <b class="font-display text-[13px] leading-tight">{{ b.title }}</b>
+  </div>
+  <div class="min-w-0">
+    @if (b.categoryName) {
+      <span class="rounded-md border border-line bg-surface-2 px-2 py-0.5 text-[11.5px] text-ink-2">{{ b.categoryName }}</span>
+    }
+    <h3 class="mt-2 mb-0.5 font-display text-xl leading-tight text-balance">{{ b.title }}</h3>
+    <p class="m-0 text-ink-2">{{ b.author }}</p>
+    <div class="mt-3.5 grid grid-cols-3 gap-2">
+      <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+        <b class="block font-display text-lg tabular-nums">{{ b.totalCopies }}</b><span class="text-[11px] text-ink-3">copies</span>
+      </div>
+      <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+        <b class="block font-display text-lg tabular-nums">{{ b.availableCopies }}</b><span class="text-[11px] text-ink-3">on shelf</span>
+      </div>
+      <div class="rounded-[10px] border border-line bg-surface-2 p-2">
+        <b class="block font-display text-lg tabular-nums">{{ detail().timesBorrowed }}</b><span class="text-[11px] text-ink-3">times borrowed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <h4 class="m-0 mb-2.5 text-xs tracking-[0.08em] text-ink-3 uppercase">Details</h4>
+  <dl class="m-0 grid grid-cols-[130px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[13px] max-[480px]:grid-cols-1">
+    <dt class="text-ink-3">ISBN</dt>
+    <dd class="m-0 tabular-nums">
+      @if (b.isbn) {
+        {{ b.isbn }}
+      } @else {
+        <span class="text-ink-3 italic">Not recorded</span>
+      }
+    </dd>
+    <dt class="text-ink-3">Publisher</dt>
+    <dd class="m-0">{{ b.publisher || '—' }}</dd>
+    <dt class="text-ink-3">Year published</dt>
+    <dd class="m-0 tabular-nums">{{ b.publicationYear || '—' }}</dd>
+    <dt class="text-ink-3">Added to library</dt>
+    <dd class="m-0">{{ added() }}</dd>
+    <dt class="text-ink-3">Description</dt>
+    <dd class="m-0 whitespace-pre-line">
+      @if (b.description) {
+        {{ b.description }}
+      } @else {
+        <span class="text-ink-3 italic">No description yet</span>
+      }
+    </dd>
+  </dl>
+</section>
+
+<section>
+  <h4 class="m-0 mb-2.5 text-xs tracking-[0.08em] text-ink-3 uppercase">Copies <span class="tabular-nums">({{ copies().length }})</span></h4>
+  @if (copies().length) {
+    <ul class="m-0 flex list-none flex-col gap-2 p-0">
+      @for (line of copies(); track line.copy.id) {
+        <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-line px-3 py-2.5 max-[480px]:grid-cols-[minmax(0,1fr)_auto]">
+          <span class="rounded-md border-[1.5px] border-ink-3 px-2 py-1 text-xs font-bold tracking-[0.04em] tabular-nums max-[480px]:col-span-2 max-[480px]:justify-self-start">
+            {{ line.copy.bookCode }}
+          </span>
+          <div class="min-w-0">
+            <b class="block text-[13px]">{{ line.where }}</b>
+            @if (line.facts) {
+              <small class="text-[11.5px] text-ink-3">{{ line.facts }}</small>
+            }
+          </div>
+          <span class="pill" [class]="line.pill.css">{{ line.pill.text }}</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="m-0 text-[12.5px] text-ink-3">No copies in the library right now.</p>
+  }
+</section>

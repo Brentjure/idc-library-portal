@@ -1,0 +1,84 @@
+@if (sheet(); as s) {
+  <!-- Preview: which rows are ready and which need fixing -->
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="mr-auto">
+      <b class="block text-[13px] break-all">{{ s.fileName }}</b>
+      <small class="text-[11.5px] text-ink-3">{{ plural(s.rows.length, 'row') }} read</small>
+    </div>
+    <span class="pill pill-ok">{{ readyRows().length }} ready</span>
+    @if (badCount()) {
+      <span class="pill pill-bad">{{ badCount() }} to fix</span>
+    }
+  </div>
+
+  <div class="max-h-[260px] overflow-auto rounded-xl border border-line">
+    <table class="tbl text-[12.5px]">
+      <thead>
+        <tr>
+          <th class="sticky top-0 rounded-none!">Row</th>
+          <th class="sticky top-0 rounded-none!">Title</th>
+          <th class="sticky top-0 rounded-none!">Category</th>
+          <th class="sticky top-0 rounded-none!">Qty</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of s.rows; track row.row) {
+          <tr [class.bg-bad-bg]="row.errors.length">
+            <td class="num p-2!">{{ row.row }}</td>
+            <td class="p-2!">
+              <b class="block font-semibold">{{ row.title || '—' }}</b>
+              <small class="block text-[11px] text-ink-3">{{ row.author || '—' }}</small>
+              @if (row.errors.length) {
+                <em class="mt-0.5 block text-[11px] font-semibold text-bad not-italic">{{ row.errors.join(' · ') }}</em>
+              }
+            </td>
+            <td class="p-2!">{{ row.category || '—' }}</td>
+            <td class="num p-2!">{{ row.copies }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (badCount()) {
+    <p class="hint">Rows to fix are skipped. Correct them in Excel and upload again, or add them one by one.</p>
+  }
+
+  <div class="flex flex-wrap justify-between gap-2">
+    <button type="button" class="btn btn-sm" (click)="sheet.set(null)">Choose another file</button>
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="!readyRows().length" (click)="addReadyRows()">
+      Add {{ plural(readyCopies(), 'copy', 'copies') }} to {{ isPurchase() ? 'this batch' : 'donation' }}
+    </button>
+  </div>
+} @else {
+  <!-- Drop zone -->
+  <label
+    for="donate-file"
+    class="flex cursor-pointer flex-col items-center gap-1.5 rounded-[14px] border-2 border-dashed px-4 py-[26px] text-center text-ink-2 transition-colors hover:border-gold-deep hover:bg-gold-soft"
+    [class]="dragOver() ? 'border-gold-deep bg-gold-soft' : 'border-line bg-surface-2'"
+    (dragenter)="onDragOver($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="dragOver.set(false)"
+    (drop)="onDrop($event)"
+  >
+    <app-icon name="upload" [size]="26" class="text-gold-deep" />
+    <b class="text-[13.5px] text-ink">Drop the Excel file here, or click to choose</b>
+    <small class="text-xs text-ink-3">.xlsx, .xls or .csv · one row per title</small>
+    <input id="donate-file" type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileChosen($event)" />
+  </label>
+  @if (error()) {
+    <app-alert>{{ error() }}</app-alert>
+  }
+}
+
+<div class="flex items-center gap-3 rounded-xl border border-line p-3">
+  <div class="min-w-0">
+    <b class="block text-[13px]">Start from the template</b>
+    <small class="mt-0.5 block text-[11.5px] leading-snug text-ink-3">
+      title*, author*, category*, copies, condition, isbn, publisher, publication_year, description
+    </small>
+  </div>
+  <a class="btn btn-sm ml-auto flex-none" href="book-donation-template.xlsx" download>
+    <app-icon name="download" [size]="15" /> Template
+  </a>
+</div>

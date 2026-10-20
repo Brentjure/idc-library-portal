@@ -1,0 +1,40 @@
+<app-drawer [open]="isOpen()" [heading]="heading()" headingId="member-drawer-heading" [hint]="hint()" icon="user" (closed)="close()">
+  @if (error()) {
+    <app-alert>{{ error() }}</app-alert>
+  }
+
+  @if (mode() === 'add' || mode() === 'edit') {
+    <app-member-edit [form]="form" [groups]="groups()" (submitted)="save()" />
+  } @else if (detail(); as d) {
+    <app-member-details [detail]="d" (returnRequested)="returnRequested.emit($event)" />
+  } @else if (loading()) {
+    <p class="m-0 text-[13px] text-ink-3">Loading the member…</p>
+  }
+
+  <ng-container drawerFooter>
+    @if (mode() === 'add' || mode() === 'edit') {
+      <button type="button" class="btn mr-auto" [disabled]="saving()" (click)="cancel()">Cancel</button>
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        {{ saving() ? 'Saving…' : mode() === 'add' ? 'Add member' : 'Save changes' }}
+      </button>
+    } @else if (detail(); as d) {
+      @if (auth.can('members.delete')) {
+        @if (d.member.active) {
+          <button type="button" class="btn btn-danger" (click)="removeRequested.emit(d)">
+            <app-icon name="trash" [size]="15" />{{ d.hasHistory ? 'Deactivate' : 'Delete' }}
+          </button>
+        } @else {
+          <button type="button" class="btn" [disabled]="saving()" (click)="reactivate()">Reactivate</button>
+        }
+      }
+      @if (auth.can('members.edit')) {
+        <button type="button" class="btn btn-edit" (click)="edit()"><app-icon name="pen" [size]="15" />Edit</button>
+      }
+      @if (auth.can('loans.borrow') && d.member.active) {
+        <button type="button" class="btn btn-primary ml-auto" (click)="lendRequested.emit(d.member)">Lend books</button>
+      }
+    } @else {
+      <button type="button" class="btn ml-auto" (click)="close()">Close</button>
+    }
+  </ng-container>
+</app-drawer>

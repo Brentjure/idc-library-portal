@@ -1,0 +1,44 @@
+@let f = form();
+
+<app-choice-chips label="Source" [options]="sources" [value]="f.source()" (valueChange)="onSource($event)" />
+
+@if (f.isPurchase()) {
+  <div class="rounded-[10px] border border-line bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-2">
+    Bought by the church. The copies are saved without a donor and show as “Purchased” on the Books page.
+  </div>
+} @else {
+  <app-member-picker
+    idPrefix="donor"
+    namePlaceholder="Donor's full name"
+    [freeText]="true"
+    [disabled]="f.anonymous()"
+    [member]="f.donorMember()"
+    (memberChange)="f.donorMember.set($event)"
+    [name]="f.donorName()"
+    (nameChange)="f.donorName.set($event)"
+    [phone]="f.donorPhone()"
+    (phoneChange)="f.donorPhone.set($event)"
+  />
+
+  <label class="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-2">
+    <input type="checkbox" class="size-[18px] accent-gold-deep" [checked]="f.anonymous()" (change)="onAnonymous($event)" />
+    The donor wishes to stay anonymous
+  </label>
+
+  <div class="flex flex-wrap gap-1.5">
+    @if (f.anonymous()) {
+      <span class="meta-chip">Shown as “Anonymous” in records and reports</span>
+    } @else if (f.donorMember(); as member) {
+      <span class="meta-chip">Church member</span>
+      @if (member.group) {
+        <span class="meta-chip">{{ member.group }}</span>
+      }
+    } @else if (f.donorName().trim().length >= 2) {
+      <span class="meta-chip">New donor · saved as a visitor</span>
+    }
+  </div>
+
+  @if (f.donorError()) {
+    <p class="err-msg">{{ f.donorError() }}</p>
+  }
+}

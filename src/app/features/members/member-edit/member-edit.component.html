@@ -1,0 +1,64 @@
+@let f = form();
+@let errors = f.errors();
+<form class="flex flex-col gap-3.5" novalidate (submit)="$event.preventDefault(); submitted.emit()">
+  <div>
+    <label class="field-label" for="member-edit-fullName">Full name <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+    <input
+      id="member-edit-fullName"
+      class="field-input"
+      maxlength="150"
+      autocomplete="off"
+      [class.invalid]="!!errors.fullName"
+      [attr.aria-invalid]="!!errors.fullName"
+      [attr.aria-describedby]="errors.fullName ? 'member-edit-name-err' : null"
+      [value]="f.fullName()"
+      (input)="set('fullName', f.fullName, $event)"
+    />
+    @if (errors.fullName) {
+      <p class="err-msg" id="member-edit-name-err">{{ errors.fullName }}</p>
+    }
+  </div>
+
+  <div>
+    <label class="field-label" for="member-edit-phone">Phone number <span class="opt">optional</span></label>
+    <input
+      id="member-edit-phone"
+      class="field-input"
+      inputmode="tel"
+      maxlength="30"
+      autocomplete="off"
+      placeholder="e.g. 0712 448 210"
+      [class.invalid]="!!errors.phone"
+      [attr.aria-invalid]="!!errors.phone"
+      [attr.aria-describedby]="errors.phone ? 'member-edit-phone-err' : 'member-edit-phone-hint'"
+      [value]="f.phone()"
+      (input)="set('phone', f.phone, $event)"
+    />
+    @if (errors.phone) {
+      <p class="err-msg" id="member-edit-phone-err">{{ errors.phone }}</p>
+    } @else {
+      <p class="hint" id="member-edit-phone-hint">Used to find them at the desk and for reminders. Each number belongs to one member.</p>
+    }
+  </div>
+
+  <div>
+    <label class="field-label" for="member-edit-group">Group or ministry <span class="opt">optional</span></label>
+    <input
+      id="member-edit-group"
+      class="field-input"
+      maxlength="100"
+      autocomplete="off"
+      list="member-edit-groups"
+      placeholder="e.g. Choir, Youth"
+      [value]="f.group()"
+      (input)="set('group', f.group, $event)"
+    />
+    <datalist id="member-edit-groups">
+      @for (group of groups(); track group) {
+        <option [value]="group"></option>
+      }
+    </datalist>
+  </div>
+
+  <button type="submit" class="hidden" tabindex="-1" aria-hidden="true"></button>
+</form>

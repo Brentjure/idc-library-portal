@@ -1,0 +1,34 @@
+@if (open()) {
+  <div class="fixed inset-0 z-[70] grid place-items-center bg-[rgb(20_18_10/0.45)] p-4" (click)="cancel()">
+    <div
+      #box
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-heading"
+      class="w-[min(420px,100%)] rounded-[18px] bg-surface p-[22px] shadow-drawer"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="cancel()"
+      (keydown.tab)="trapTab($event)"
+      (keydown.shift.tab)="trapTab($event)"
+    >
+      <span
+        class="mb-3 grid size-11 place-items-center rounded-full"
+        [class]="tone() === 'warn' ? 'bg-warn-bg text-warn' : 'bg-bad-bg text-bad'"
+      >
+        <app-icon [name]="tone() === 'warn' ? 'alert' : icon()" [size]="20" />
+      </span>
+      <h3 id="confirm-heading" class="m-0 mb-1.5 font-display text-[19px] font-bold text-balance">{{ heading() }}</h3>
+      <div class="text-[13.5px] text-ink-2 [&_p]:mb-2.5">
+        <ng-content />
+      </div>
+      <div class="mt-[18px] flex justify-end gap-2.5 max-[480px]:[&>button]:flex-1">
+        <button #cancelButton type="button" class="btn" [disabled]="busy()" (click)="cancel()">{{ cancelLabel() }}</button>
+        @if (confirmLabel()) {
+          <button type="button" class="btn border-bad bg-bad text-surface hover:border-bad hover:brightness-95" [disabled]="busy()" (click)="confirmed.emit()">
+            {{ busy() ? 'Working…' : confirmLabel() }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

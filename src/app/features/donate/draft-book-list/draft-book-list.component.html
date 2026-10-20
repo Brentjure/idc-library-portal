@@ -1,0 +1,31 @@
+<ul class="m-0 flex list-none flex-col gap-2 p-0" [attr.aria-label]="isPurchase() ? 'Books in this batch' : 'Donated books'">
+  @for (book of books(); track book.key) {
+    @let bookErrors = errors()[book.key];
+    <li class="rounded-xl border bg-surface py-2 pr-2 pl-2.5" [class]="bookErrors ? 'border-bad' : 'border-line'">
+      <app-book-line [title]="book.title" [subtitle]="book.author + ' · ' + book.categoryName">
+        <div bookLineBelow class="mt-1 flex flex-wrap gap-1">
+          <span class="tag">{{ plural(book.copies, 'copy', 'copies') }}</span>
+          <span class="tag">{{ capitalise(book.condition) }}</span>
+          @if (book.existing) {
+            <span class="tag">Extra copy</span>
+          } @else if (book.fromSpreadsheet) {
+            <span class="tag">From spreadsheet</span>
+          } @else {
+            <span class="tag new">New title</span>
+          }
+          @if (book.isbn) {
+            <span class="tag">ISBN {{ book.isbn }}</span>
+          }
+        </div>
+        @for (message of bookErrors ?? []; track message) {
+          <p bookLineBelow class="err-msg">{{ message }}</p>
+        }
+        <button type="button" class="remove-x" [attr.aria-label]="'Remove ' + book.title" (click)="remove.emit(book.key)">×</button>
+      </app-book-line>
+    </li>
+  } @empty {
+    <li>
+      <app-empty-state [icon]="isPurchase() ? 'bookPlus' : 'gift'">Books you add will be listed here.</app-empty-state>
+    </li>
+  }
+</ul>

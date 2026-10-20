@@ -1,0 +1,14 @@
+@reference "../../../styles.css";
+
+.tile {
+  @apply w-[46px] flex-none overflow-hidden rounded-[10px] border border-line bg-surface text-center;
+}
+.tile small {
+  @apply block bg-gold py-0.5 text-[9.5px] font-bold tracking-[0.08em] text-on-gold uppercase;
+}
+.tile b {
+  @apply block font-display text-lg leading-[1.3] text-ink;
+}
+.tile span {
+  @apply block pb-[3px] text-[10px] text-ink-3;
+}

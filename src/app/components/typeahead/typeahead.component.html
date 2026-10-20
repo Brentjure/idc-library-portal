@@ -1,0 +1,73 @@
+<label class="field-label" [for]="inputId()">
+  {{ label() }}
+  @if (optional()) {
+    <span class="opt">optional</span>
+  }
+</label>
+
+<div class="relative">
+  <app-icon
+    [name]="icon()"
+    [size]="16"
+    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+    [class.text-gold-deep]="picked()"
+    [class.text-ink-3]="!picked()"
+  />
+  <input
+    #field
+    class="field-input pl-[38px]"
+    autocomplete="off"
+    role="combobox"
+    [id]="inputId()"
+    [class.picked]="picked()"
+    [attr.inputmode]="inputMode()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [value]="text()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="inputId() + '-results'"
+    [attr.aria-activedescendant]="isOpen() && results().length ? inputId() + '-opt-' + highlighted() : null"
+    (input)="onInput($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)"
+  />
+</div>
+
+@if (isOpen()) {
+  <!-- mousedown is cancelled so clicking a result doesn't take focus away from the field -->
+  <div
+    role="listbox"
+    class="absolute inset-x-0 top-[calc(100%+4px)] z-10 max-h-[280px] overflow-y-auto rounded-xl border border-line bg-surface p-1.5 shadow-pop"
+    [id]="inputId() + '-results'"
+    (mousedown)="$event.preventDefault()"
+  >
+    @if (loading()) {
+      <div class="p-3 text-[12.5px] text-ink-3">Searching…</div>
+    } @else {
+      @for (item of results(); track $index) {
+        <button
+          type="button"
+          role="option"
+          class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg p-2 text-left disabled:cursor-not-allowed disabled:opacity-50"
+          [id]="inputId() + '-opt-' + $index"
+          [attr.aria-selected]="$index === highlighted()"
+          [disabled]="isDisabled()(item)"
+          [class.bg-surface-2]="$index === highlighted()"
+          (mouseenter)="highlighted.set($index)"
+          (click)="choose($index)"
+        >
+          <ng-container *ngTemplateOutlet="rowTemplate(); context: { $implicit: item }" />
+        </button>
+      } @empty {
+        <div class="p-3 text-[12.5px] text-ink-3">
+          @if (noneTemplate(); as none) {
+            <ng-container *ngTemplateOutlet="none; context: { $implicit: text().trim() }" />
+          } @else {
+            No match for “{{ text().trim() }}”.
+          }
+        </div>
+      }
+    }
+  </div>
+}

@@ -1,0 +1,112 @@
+<div class="mb-3.5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h2 id="today-heading" class="m-0 font-display text-[19px] font-bold">Borrowed today</h2>
+    <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">{{ todayLabel }} · updates as books are lent at the desk</p>
+  </div>
+  <div class="flex gap-2">
+    @if (auth.can('loans.return')) {
+      <button type="button" class="btn btn-sm" (click)="desk.openReturn()">Return</button>
+    }
+    @if (auth.can('loans.borrow')) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="desk.openBorrow()">+ Borrow books</button>
+    }
+  </div>
+</div>
+
+<!-- Counts -->
+<div class="mb-3.5 grid grid-cols-3 gap-2.5">
+  <div class="rounded-xl bg-gold-soft px-3 py-2.5">
+    <b class="num block font-display text-xl">{{ onLoanCount() }}</b>
+    <span class="text-xs text-ink-2">On loan</span>
+  </div>
+  <div class="rounded-xl border border-line px-3 py-2.5">
+    <b class="num block font-display text-xl">{{ returnedCount() }}</b>
+    <span class="text-xs text-ink-2">Returned same day</span>
+  </div>
+  <div class="rounded-xl border border-line px-3 py-2.5">
+    <b class="num block font-display text-xl">{{ checkedInToday() }}</b>
+    <span class="text-xs text-ink-2">Checked in today</span>
+  </div>
+</div>
+
+<!-- Search and filter -->
+<div class="mb-2.5 flex flex-wrap gap-2.5">
+  <label
+    for="today-search"
+    class="flex h-9 min-w-[150px] flex-1 items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 text-ink-3 focus-within:border-gold-deep"
+  >
+    <app-icon name="search" [size]="16" />
+    <input
+      id="today-search"
+      class="w-full border-0 bg-transparent text-ink outline-none placeholder:text-ink-3"
+      placeholder="Filter by member, title or code"
+      [value]="search()"
+      (input)="typed($event)"
+    />
+  </label>
+  <app-choice-chips label="Status filter" [options]="filters" [value]="filter()" (valueChange)="changeFilter($event)" />
+</div>
+
+<!-- Table -->
+<div class="-mx-[22px] overflow-x-auto px-[22px]">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Member</th>
+        <th>Book</th>
+        <th>Category</th>
+        <th>Out</th>
+        <th>Due</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (error()) {
+        <tr><td colspan="6" class="py-7 text-center text-bad">{{ error() }}</td></tr>
+      } @else if (loading()) {
+        <tr><td colspan="6" class="py-7 text-center text-ink-3">Loading…</td></tr>
+      } @else {
+        @for (loan of rows(); track loan.transactionId) {
+          @let state = status(loan);
+          <tr>
+            <td><app-member-line class="min-w-[150px]" [name]="loan.memberName" [subtitle]="formatPhone(loan.memberPhone)" /></td>
+            <td class="min-w-[150px]">
+              <b class="block leading-tight font-semibold">{{ loan.title }}</b>
+              <small class="text-[11.5px] text-ink-3">{{ loan.author }} · {{ loan.bookCode }}</small>
+            </td>
+            <td>
+              @if (loan.categoryName) {
+                <span class="rounded-md border border-line bg-surface-2 px-2 py-0.5 text-[11.5px] whitespace-nowrap text-ink-2">{{ loan.categoryName }}</span>
+              }
+            </td>
+            <td class="num whitespace-nowrap text-ink-2">{{ formatTime(loan.borrowedAt) }}</td>
+            <td class="whitespace-nowrap text-ink-2">{{ formatDayMonth(loan.dueDate) }}</td>
+            <td>
+              <div class="flex items-center gap-2">
+                <span class="pill" [class]="state.pillClass">{{ state.text }}</span>
+                @if (!loan.returnedAt && auth.can('loans.return')) {
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded-lg border border-line bg-surface px-2.5 py-[3px] text-xs font-semibold whitespace-nowrap text-ink-2 hover:border-gold-deep hover:bg-gold-soft hover:text-ink"
+                    [attr.aria-label]="'Return ' + loan.title + ' from ' + loan.memberName"
+                    (click)="returnBook(loan)"
+                  >
+                    Return
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="py-7 text-center text-ink-3">
+              {{ loans().length ? 'No loans match this filter.' : 'Nothing lent yet today. Books appear here as you lend them.' }}
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-3 text-[12.5px] text-ink-3">{{ plural(rows().length, 'loan') }} shown</div>

@@ -1,0 +1,63 @@
+<app-drawer
+  [open]="isOpen()"
+  [heading]="isAdd() ? 'New role' : 'Rename role'"
+  headingId="role-drawer-heading"
+  [hint]="isAdd() ? 'Then switch on what people with this role may do' : 'Users with this role keep it'"
+  icon="shield"
+  (closed)="close()"
+>
+  @if (error()) {
+    <app-alert>{{ error() }}</app-alert>
+  }
+
+  <form class="flex flex-col gap-3.5" novalidate (submit)="$event.preventDefault(); save()">
+    <div>
+      <label class="field-label" for="role-name">Name <span class="ml-1 text-[11px] font-medium text-gold-deep">required</span></label>
+      <input
+        id="role-name"
+        class="field-input"
+        maxlength="50"
+        autocomplete="off"
+        placeholder="e.g. Volunteer"
+        [class.invalid]="!!nameError()"
+        [value]="name()"
+        (input)="name.set(value($event)); nameError.set('')"
+      />
+      @if (nameError()) {
+        <p class="err-msg">{{ nameError() }}</p>
+      }
+    </div>
+    <div>
+      <label class="field-label" for="role-description">Description <span class="opt">optional</span></label>
+      <textarea
+        id="role-description"
+        class="field-input h-auto resize-y py-2.5"
+        rows="3"
+        maxlength="255"
+        placeholder="Who gets this role, e.g. Saturday desk helpers"
+        [value]="description()"
+        (input)="description.set(value($event))"
+      ></textarea>
+    </div>
+    @if (isAdd()) {
+      <div>
+        <label class="field-label" for="role-copy">Start with the permissions of <span class="opt">optional</span></label>
+        <select id="role-copy" class="field-input px-2.5" (change)="selectCopy($event)">
+          <option value="" [selected]="copyFrom() === null">Nothing: I’ll switch them on myself</option>
+          @for (role of roles(); track role.id) {
+            <option [value]="role.id" [selected]="copyFrom() === role.id">{{ roleLabel(role.name) }}</option>
+          }
+        </select>
+        <p class="hint">You can change every permission afterwards.</p>
+      </div>
+    }
+    <button type="submit" class="hidden" tabindex="-1" aria-hidden="true"></button>
+  </form>
+
+  <ng-container drawerFooter>
+    <button type="button" class="btn mr-auto" [disabled]="saving()" (click)="close()">Cancel</button>
+    <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Saving…' : isAdd() ? 'Create role' : 'Save' }}
+    </button>
+  </ng-container>
+</app-drawer>

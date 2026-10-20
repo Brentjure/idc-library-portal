@@ -1,0 +1,23 @@
+@reference "../../../../styles.css";
+
+/* Copies: − [ 3 ] + */
+.stepper {
+  @apply grid h-10 grid-cols-[40px_1fr_40px] overflow-hidden rounded-[10px] border border-line bg-surface;
+}
+.stepper button {
+  @apply cursor-pointer border-0 bg-surface-2 text-lg text-ink hover:bg-gold-soft;
+}
+.stepper input {
+  @apply h-full w-full border-0 text-center font-bold outline-none;
+}
+
+/* "More details" toggle with a + / − circle */
+.more summary::-webkit-details-marker {
+  display: none;
+}
+.more summary::before {
+  @apply grid size-[18px] place-items-center rounded-full border border-line bg-surface text-[13px] content-['+'];
+}
+.more[open] summary::before {
+  content: '−';
+}

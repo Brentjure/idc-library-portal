@@ -1,0 +1,72 @@
+<!-- One result row, shared by both fields -->
+<ng-template #memberRow let-m>
+  <app-member-line [name]="m.fullName" [subtitle]="contact(m)">
+    <span class="text-right text-[11.5px] whitespace-nowrap" [class]="m.overdueCount ? 'text-bad' : 'text-ink-3'">
+      {{ loanSummary(m) }}
+    </span>
+  </app-member-line>
+</ng-template>
+
+<app-typeahead
+  #nameField
+  label="Full name"
+  icon="user"
+  [inputId]="idPrefix() + '-name'"
+  [placeholder]="namePlaceholder()"
+  [disabled]="disabled()"
+  [picked]="!!member()"
+  [fetch]="searchByName"
+  [(text)]="name"
+  (typed)="onTyped('name')"
+  (picks)="select($event)"
+>
+  <ng-template #row let-m><ng-container *ngTemplateOutlet="memberRow; context: { $implicit: m }" /></ng-template>
+  <ng-template #none let-text>
+    @if (freeText()) {
+      <b class="text-ink">“{{ text }}” is not a member.</b> Keep typing. They will be saved as a new donor.
+    } @else {
+      No member called “{{ text }}”.
+      @if (canAdd()) {
+        <button type="button" class="link mt-1 block" (click)="startAdding(text, '')">+ Add “{{ text }}” as a new member</button>
+      }
+    }
+  </ng-template>
+</app-typeahead>
+
+<app-typeahead
+  label="Phone number"
+  icon="phone"
+  inputMode="tel"
+  placeholder="e.g. 0712 448 210"
+  [inputId]="idPrefix() + '-phone'"
+  [optional]="freeText()"
+  [minChars]="3"
+  [disabled]="disabled()"
+  [picked]="!!member()"
+  [fetch]="searchByPhone"
+  [(text)]="phone"
+  (typed)="onTyped('phone')"
+  (picks)="select($event)"
+>
+  <ng-template #row let-m><ng-container *ngTemplateOutlet="memberRow; context: { $implicit: m }" /></ng-template>
+  <ng-template #none let-text>
+    @if (freeText()) {
+      No member with this number. That's fine, it will be saved with the new donor.
+    } @else {
+      No member with this number.
+      @if (canAdd()) {
+        <button type="button" class="link mt-1 block" (click)="startAdding('', text)">+ Add a new member with this number</button>
+      }
+    }
+  </ng-template>
+</app-typeahead>
+
+@if (addingNew(); as start) {
+  <app-new-member-form
+    [idPrefix]="idPrefix()"
+    [initialName]="start.name"
+    [initialPhone]="start.phone"
+    (created)="select($event)"
+    (cancelled)="addingNew.set(null)"
+  />
+}

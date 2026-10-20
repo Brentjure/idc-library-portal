@@ -1,0 +1,175 @@
+<ng-template #downloadButton let-name>
+  @if (canExport()) {
+    <button type="button" class="btn btn-sm flex-none" [disabled]="downloading() !== null" (click)="download(name)">
+      <app-icon name="download" [size]="14" />{{ downloading() === name ? 'Preparing…' : 'CSV' }}
+    </button>
+  }
+</ng-template>
+
+<section class="card flex flex-wrap items-end gap-3" aria-label="Period">
+  <div class="min-w-0 flex-1">
+    <span class="field-label">Period</span>
+    <div class="seg w-fit max-w-full overflow-x-auto" role="group" aria-label="Period">
+      @for (p of presets; track p.value) {
+        <button type="button" [attr.aria-pressed]="preset() === p.value" (click)="choosePreset(p.value)">{{ p.label }}</button>
+      }
+    </div>
+  </div>
+  <div>
+    <label class="field-label" for="report-from">From</label>
+    <input id="report-from" type="date" class="field-input h-[38px]" [max]="range().to" [value]="range().from" (change)="setDate('from', $event)" />
+  </div>
+  <div>
+    <label class="field-label" for="report-to">To</label>
+    <input id="report-to" type="date" class="field-input h-[38px]" [min]="range().from" [max]="today" [value]="range().to" (change)="setDate('to', $event)" />
+  </div>
+  @if (periodText()) {
+    <p class="hint m-0 w-full">{{ periodText() }}</p>
+  }
+</section>
+
+@if (error()) {
+  <app-alert>{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></app-alert>
+}
+
+<section
+  class="card grid grid-cols-6 overflow-hidden p-0 max-[1100px]:grid-cols-3 max-[480px]:grid-cols-2 [&>div]:border-line"
+  [class.opacity-60]="loading()"
+  aria-label="The period at a glance"
+>
+  @for (t of tiles(); track t.label; let i = $index) {
+    <div class="border-l px-[18px] py-3.5 first:border-l-0 max-[1100px]:[&:nth-child(n+4)]:border-t max-[1100px]:[&:nth-child(4)]:border-l-0">
+      <span class="text-xs text-ink-2">{{ t.label }}</span>
+      <b class="block font-display text-[22px] leading-tight tabular-nums">{{ t.value }}</b>
+      <small class="text-[11.5px]" [class]="t.change.direction === 'down' ? 'text-bad' : t.change.direction === 'up' ? 'text-good' : 'text-ink-3'">
+        {{ t.change.text }}
+      </small>
+    </div>
+  } @empty {
+    <div class="col-span-full px-[18px] py-3.5 text-[13px] text-ink-3">{{ loading() ? 'Loading…' : '' }}</div>
+  }
+</section>
+
+@if (report(); as r) {
+  <section class="card" aria-labelledby="activity-heading">
+    <div class="mb-3 flex items-start justify-between gap-3">
+      <div>
+        <h2 id="activity-heading" class="m-0 font-display text-base font-bold">Borrowing activity</h2>
+        <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">Books lent and returned each {{ unitWord() }}</p>
+      </div>
+      <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'activity' }" />
+    </div>
+    <app-column-chart [label]="'Loans and returns per ' + unitWord()" [series]="series" [groups]="groups()" />
+  </section>
+
+  <div class="grid items-start gap-[18px] min-[981px]:grid-cols-2">
+    <section class="card" aria-labelledby="popular-heading">
+      <div class="mb-3.5 flex items-start justify-between gap-3">
+        <div>
+          <h2 id="popular-heading" class="m-0 font-display text-base font-bold">Most borrowed</h2>
+          <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">Loans per title, top 10</p>
+        </div>
+        <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'popular' }" />
+      </div>
+      <app-bar-list label="Most borrowed titles" unit="loans" [items]="popular()" emptyText="Nothing was borrowed in this period." />
+    </section>
+
+    <section class="card" aria-labelledby="category-heading">
+      <div class="mb-3.5 flex items-start justify-between gap-3">
+        <div>
+          <h2 id="category-heading" class="m-0 font-display text-base font-bold">Loans by category</h2>
+          <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">What people read</p>
+        </div>
+        <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'categories' }" />
+      </div>
+      <app-bar-list label="Loans by category" unit="loans" [items]="categories()" emptyText="Nothing was borrowed in this period." />
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="unused-heading">
+    <div class="mb-3.5 flex items-start justify-between gap-3">
+      <div>
+        <h2 id="unused-heading" class="m-0 font-display text-base font-bold">
+          Not borrowed in this period <span class="text-ink-3 tabular-nums">({{ r.unused.total }})</span>
+        </h2>
+        <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">On the shelf but nobody took them: worth displaying, or giving away</p>
+      </div>
+      <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'unused' }" />
+    </div>
+    @if (unused().length) {
+      <div class="-mx-[18px] overflow-x-auto px-[18px]">
+        <table class="tbl">
+          <thead>
+            <tr><th>Book</th><th>Category</th><th class="text-right">Copies</th><th>Last borrowed</th></tr>
+          </thead>
+          <tbody>
+            @for (t of unused(); track t.titleId) {
+              <tr>
+                <td class="min-w-[200px] py-2.5"><b class="block font-semibold">{{ t.title }}</b><small class="text-[11.5px] text-ink-3">{{ t.author }}</small></td>
+                <td class="py-2.5 text-ink-2">{{ t.category || '—' }}</td>
+                <td class="py-2.5 text-right tabular-nums">{{ t.copies }}</td>
+                <td class="py-2.5 whitespace-nowrap text-ink-2">{{ t.last }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (r.unused.total > unused().length) {
+        <p class="hint mt-2">Showing {{ unused().length }} of {{ r.unused.total }}, longest unborrowed first. Download the CSV for all of them.</p>
+      }
+    } @else {
+      <p class="m-0 text-[13px] text-ink-3">Every book on the shelf was borrowed at least once. Lovely.</p>
+    }
+  </section>
+
+  <div class="grid items-start gap-[18px] min-[981px]:grid-cols-2">
+    <section class="card" aria-labelledby="donations-heading">
+      <div class="mb-3.5 flex items-start justify-between gap-3">
+        <div>
+          <h2 id="donations-heading" class="m-0 font-display text-base font-bold">Books received</h2>
+          <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">
+            {{ plural(r.activity.copiesDonated, 'copy', 'copies') }} donated, {{ plural(r.activity.copiesPurchased, 'copy', 'copies') }} bought
+          </p>
+        </div>
+        <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'donations' }" />
+      </div>
+      @if (donations().length) {
+        <ul class="m-0 flex list-none flex-col p-0">
+          @for (d of donations(); track d.id) {
+            <li class="flex items-baseline justify-between gap-3 border-b border-line py-2 text-[13px] last:border-b-0">
+              <span class="min-w-0">
+                <b class="block truncate font-semibold">{{ d.donor }}</b>
+                <small class="text-[11.5px] text-ink-3">{{ d.when }} · {{ d.source === 'PURCHASE' ? 'Purchase' : 'Donation' }}</small>
+              </span>
+              <span class="flex-none text-ink-2 tabular-nums">{{ plural(d.copies, 'copy', 'copies') }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="m-0 text-[13px] text-ink-3">No books came in during this period.</p>
+      }
+    </section>
+
+    <section class="card" aria-labelledby="donors-heading">
+      <div class="mb-3.5 flex items-start justify-between gap-3">
+        <div>
+          <h2 id="donors-heading" class="m-0 font-display text-base font-bold">Top donors</h2>
+          <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">Copies given. Anonymous gifts aren’t listed.</p>
+        </div>
+        <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'donors' }" />
+      </div>
+      <app-bar-list label="Top donors" unit="copies" [items]="donors()" emptyText="No named donations in this period." />
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="borrowers-heading">
+    <div class="mb-3.5 flex items-start justify-between gap-3">
+      <div>
+        <h2 id="borrowers-heading" class="m-0 font-display text-base font-bold">Most active borrowers</h2>
+        <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">Loans per member, top 10. This names people: share it with care.</p>
+      </div>
+      <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'borrowers' }" />
+    </div>
+    <app-bar-list label="Most active borrowers" unit="loans" [items]="borrowers()" emptyText="Nobody borrowed in this period." />
+  </section>
+}

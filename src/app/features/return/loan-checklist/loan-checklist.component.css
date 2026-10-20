@@ -1,0 +1,12 @@
+@reference "../../../../styles.css";
+
+.item {
+  @apply rounded-xl border border-line bg-surface transition-colors;
+}
+.item.ticked {
+  @apply border-gold-deep bg-gold-soft;
+}
+/* Overdue books get a red edge */
+.item.late {
+  @apply border-l-[3px] border-l-bad;
+}

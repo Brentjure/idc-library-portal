@@ -1,0 +1,9 @@
+@reference "../../../styles.css";
+
+/* Small row buttons: Return, Renew, Copy reminder */
+.act {
+  @apply cursor-pointer rounded-lg border border-line bg-surface px-2.5 py-[3px] text-xs font-semibold whitespace-nowrap text-ink-2 hover:border-gold-deep hover:bg-gold-soft hover:text-ink disabled:cursor-default disabled:bg-surface-2 disabled:opacity-55 disabled:hover:border-line disabled:hover:bg-surface-2;
+}
+.act-bad {
+  @apply border-bad-bg bg-bad-bg text-bad hover:border-bad hover:bg-bad hover:text-surface;
+}

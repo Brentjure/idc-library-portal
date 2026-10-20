@@ -1,0 +1,216 @@
+@let s = summary();
+<section class="card grid grid-cols-5 overflow-hidden p-0 max-[900px]:grid-cols-3 max-[480px]:grid-cols-2 [&>div]:border-line" aria-label="Loans at a glance">
+  <div class="px-[18px] py-3.5">
+    <b class="block font-display text-[22px] leading-tight tabular-nums">{{ s?.onLoan ?? '—' }}</b>
+    <span class="text-xs text-ink-2">On loan now</span>
+  </div>
+  <div class="border-l px-[18px] py-3.5">
+    <b class="block font-display text-[22px] leading-tight tabular-nums" [class.text-bad]="(s?.overdue ?? 0) > 0">{{ s?.overdue ?? '—' }}</b>
+    <span class="text-xs text-ink-2">Overdue</span>
+  </div>
+  <div class="border-l px-[18px] py-3.5 max-[480px]:border-l-0 max-[480px]:border-t">
+    <b class="block font-display text-[22px] leading-tight tabular-nums">{{ s?.dueSoon ?? '—' }}</b>
+    <span class="text-xs text-ink-2">Due in 3 days</span>
+  </div>
+  <div class="border-l px-[18px] py-3.5 max-[900px]:border-l-0 max-[900px]:border-t max-[480px]:border-l">
+    <b class="block font-display text-[22px] leading-tight tabular-nums">{{ s?.returnedLast30Days ?? '—' }}</b>
+    <span class="text-xs text-ink-2">Returned in 30 days</span>
+  </div>
+  <div class="border-l px-[18px] py-3.5 max-[900px]:border-t max-[480px]:border-l-0">
+    <b class="block font-display text-[22px] leading-tight tabular-nums">
+      {{ s?.averageLoanDays === null || s?.averageLoanDays === undefined ? '—' : plural(s!.averageLoanDays!, 'day') }}
+    </b>
+    <span class="text-xs text-ink-2">Average loan</span>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="register-heading">
+  <div class="mb-3.5 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 id="register-heading" class="m-0 font-display text-base font-bold">Loans register</h2>
+      <p class="mt-0.5 mb-0 text-[12.5px] text-ink-3">Every book borrowed, when it is due and when it came back</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      @if (auth.can('loans.return')) {
+        <button type="button" class="btn btn-sm" (click)="desk.openReturn()"><app-icon name="returnIn" [size]="14" />Return books</button>
+      }
+      @if (auth.can('loans.borrow')) {
+        <button type="button" class="btn btn-primary btn-sm" (click)="desk.openBorrow()"><app-icon name="plus" [size]="14" />Borrow books</button>
+      }
+    </div>
+  </div>
+
+  <div class="-mt-1 mb-3.5 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Loans">
+    @for (t of tabs; track t.value) {
+      @let count = tabCounts()[t.value];
+      <button
+        type="button"
+        role="tab"
+        class="-mb-px flex cursor-pointer items-center gap-2 border-0 border-b-[2.5px] bg-transparent px-3.5 py-2.5 text-[13.5px] font-semibold whitespace-nowrap"
+        [class]="tab() === t.value ? 'border-gold text-ink' : 'border-transparent text-ink-2'"
+        [attr.aria-selected]="tab() === t.value"
+        (click)="selectTab(t.value)"
+      >
+        {{ t.label }}
+        @if (count !== null) {
+          <span
+            class="rounded-full border px-2 text-[11.5px] tabular-nums"
+            [class]="t.value === 'OVERDUE' && count > 0 ? 'border-transparent bg-bad-bg text-bad' : 'border-line bg-surface-2 text-ink-2'"
+          >{{ count }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  <div class="mb-3 flex flex-wrap items-center gap-2.5">
+    <label class="flex h-[38px] min-w-[220px] flex-1 items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 text-ink-3 focus-within:border-gold-deep">
+      <app-icon name="search" [size]="16" />
+      <span class="sr-only">Search loans</span>
+      <input
+        class="w-full border-0 bg-transparent text-ink outline-none"
+        placeholder="Search member, phone, book or code"
+        autocomplete="off"
+        [value]="searchText()"
+        (input)="typeSearch($event)"
+      />
+    </label>
+    <label class="flex items-center gap-2 text-[12.5px] text-ink-2">
+      Borrowed
+      <select class="h-[38px] rounded-[10px] border border-line bg-surface px-2.5 text-ink" (change)="selectPeriod($event)">
+        @for (option of periods; track option.value) {
+          <option [value]="option.value" [selected]="option.value === period()">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    <label class="flex items-center gap-2 text-[12.5px] text-ink-2">
+      Sort
+      <select class="h-[38px] rounded-[10px] border border-line bg-surface px-2.5 text-ink" (change)="selectSort($event)">
+        @for (option of sorts; track option.value) {
+          <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (manualReminder(); as reminder) {
+    <div class="mb-3 rounded-xl border border-line bg-surface-2 p-3">
+      <div class="mb-2 flex items-center gap-2.5">
+        <b>Reminder message</b>
+        <small class="mr-auto text-xs text-ink-3">{{ reminder.to }}</small>
+        <button type="button" class="remove-x" aria-label="Close the reminder" (click)="manualReminder.set(null)">×</button>
+      </div>
+      <label for="reminder-text" class="sr-only">Reminder message</label>
+      <textarea #reminderText id="reminder-text" class="field-input h-auto resize-y py-2.5" rows="3" readonly [value]="reminder.text"></textarea>
+      <p class="hint">Copy this text and send it by SMS or WhatsApp.</p>
+    </div>
+  }
+
+  @if (error()) {
+    <app-alert class="mb-3">{{ error() }} <button type="button" class="link" (click)="load()">Try again</button></app-alert>
+  }
+
+  <div class="-mx-[18px] overflow-x-auto px-[18px]">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Book</th>
+          <th>Borrowed</th>
+          <th>Due</th>
+          <th>Returned</th>
+          <th>Status</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody [class.opacity-60]="loading() && loans().length > 0">
+        @for (row of rows(); track row.loan.transactionId) {
+          @let l = row.loan;
+          <tr [class.shadow-[inset_3px_0_0_var(--color-bad)]]="row.state.late">
+            <td class="py-[11px]"><app-member-line class="min-w-[160px]" [name]="l.memberName" [subtitle]="row.phone" /></td>
+            <td class="min-w-[150px] py-[11px]">
+              <b class="block leading-tight font-semibold">{{ l.title }}</b>
+              <small class="text-[11.5px] text-ink-3 tabular-nums">{{ l.bookCode }}</small>
+            </td>
+            <td class="py-[11px] whitespace-nowrap text-ink-2 tabular-nums">{{ row.borrowed }}</td>
+            <td class="py-[11px] whitespace-nowrap text-ink-2 tabular-nums">
+              {{ row.due }}
+              @if (l.renewedCount > 0) {
+                <small class="block text-[11px] text-ink-3">Renewed</small>
+              }
+            </td>
+            <td class="py-[11px] whitespace-nowrap text-ink-2 tabular-nums">
+              @if (row.returned) {
+                {{ row.returned }}
+              } @else {
+                <span class="text-ink-3">—</span>
+              }
+            </td>
+            <td class="py-[11px]">
+              <span class="pill" [class]="row.state.pill">{{ row.state.text }}</span>
+              @if (row.state.note) {
+                <small class="mt-[3px] block text-[11px]" [class]="row.state.noteBad ? 'text-bad' : 'text-ink-3'">{{ row.state.note }}</small>
+              }
+              @if (row.reminded) {
+                <small class="mt-[3px] block text-[11px] text-ink-3">{{ row.reminded }}</small>
+              }
+            </td>
+            <td class="py-[11px]">
+              @if (l.returnedAt) {
+                <span class="text-ink-3">—</span>
+              } @else {
+                <div class="flex justify-end gap-1.5">
+                  @if (auth.can('loans.return')) {
+                    <button type="button" class="act" (click)="returnBook(l)">Return</button>
+                  }
+                  @if (row.state.late) {
+                    @if (auth.can('loans.remind')) {
+                      <button
+                        type="button"
+                        class="act"
+                        [class]="row.reminded ? '' : 'act-bad'"
+                        [disabled]="busyId() === l.transactionId"
+                        (click)="remind(l)"
+                      >
+                        {{ row.reminded ? 'Copy again' : 'Copy reminder' }}
+                      </button>
+                    }
+                  } @else if (auth.can('loans.renew')) {
+                    <button
+                      type="button"
+                      class="act"
+                      [disabled]="!l.renewable || busyId() === l.transactionId"
+                      [attr.title]="l.renewable ? 'Add 2 weeks' : 'Already renewed'"
+                      (click)="renew(l)"
+                    >
+                      {{ busyId() === l.transactionId ? 'Renewing…' : l.renewable ? 'Renew' : 'Renewed' }}
+                    </button>
+                  }
+                </div>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="px-2 py-7 text-center text-ink-3">
+              @if (loading()) {
+                Loading loans…
+              } @else {
+                {{ emptyText() }}
+                @if (isFiltered()) {
+                  <button type="button" class="link" (click)="clearFilters()">Clear the filters</button>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-3 flex items-center justify-between text-[12.5px] text-ink-3">
+    <span>Showing {{ loans().length }} of {{ plural(total(), 'loan') }}</span>
+    @if (hasMore()) {
+      <button type="button" class="link" [disabled]="loadingMore()" (click)="showMore()">{{ loadingMore() ? 'Loading…' : 'Show more' }}</button>
+    }
+  </div>
+</section>
