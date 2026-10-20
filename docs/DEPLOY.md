@@ -39,7 +39,7 @@ The `prod` profile has no defaults for these. The app won't start if one is miss
 Workers & Pages → Create → Pages → connect the portal repository.
 - Build command: `npx ng build`
 - Build output directory: `dist/library-portal/browser`
-- Environment variable: `BACKEND_URL` = the Render address, e.g. `https://idc-library.onrender.com`, with no trailing slash.
+- `BACKEND_URL` (the Render address, no trailing slash) is in `wrangler.toml` under `[vars]`. With that file present, Pages ignores plain variables set in the dashboard. Node 22 comes from `.nvmrc`.
 
 After the first deploy, set `APP_PORTAL_URL` on Render to the Pages address, so invitation links point at it.
 

@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Function: forwards /idc-library/* to the Spring Boot backend, so the portal and its API
  * share one address (no CORS, same as the dev proxy in proxy.conf.json).
- * Set BACKEND_URL in the Pages project settings, e.g. https://idc-library.onrender.com (no trailing slash).
+ * Set BACKEND_URL in wrangler.toml [vars], e.g. https://library-qwyt.onrender.com (no trailing slash).
  */
 export async function onRequest({ request, env }) {
   if (!env.BACKEND_URL) {
