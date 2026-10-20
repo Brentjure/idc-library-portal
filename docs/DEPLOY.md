@@ -47,7 +47,34 @@ After the first deploy, set `APP_PORTAL_URL` on Render to the Pages address, so 
 Add an HTTP monitor for `https://<portal>/idc-library/api/v1/health`, every 10 minutes. It alerts by email when the site is down.
 
 ## 5. Backups
-Neon's free plan keeps only a short restore window. Take a weekly `pg_dump` of the Neon database, e.g. to Google Drive.
+Neon's free plan keeps only about a day of history. The backend repository's `.github/workflows/backup.yml` dumps the
+Neon database every night at midnight (Nairobi time), encrypts it, and keeps each backup for 90 days under
+**Actions → Database backup → a run → Artifacts**. GitHub emails you when a run fails.
+
+Repository secrets (backend repo → Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `BACKUP_DATABASE_URL` | `postgresql://neondb_owner:PASSWORD@HOST/idc_library?sslmode=require`, direct host (pooling off) |
+| `BACKUP_PASSPHRASE` | a long random passphrase. Store it in a password manager: **without it no backup can be opened.** |
+
+After changing the Neon password, update `BACKUP_DATABASE_URL` too, or the backups stop (and GitHub emails you).
+
+**Restore** (Git Bash; needs the PostgreSQL **18** client tools, since Neon runs 18):
+1. Download the artifact (a zip) and unzip it: `idc-library-YYYY-MM-DD.dump.gpg`.
+2. Decrypt it. gpg asks for the passphrase:
+   ```bash
+   gpg -d -o idc-library.dump idc-library-YYYY-MM-DD.dump.gpg
+   ```
+3. Look before restoring: `pg_restore --list idc-library.dump`
+4. Restore into an **empty** database (a new Neon branch or database, or a local one), never over the live data:
+   ```bash
+   pg_restore --no-owner --no-privileges -d "postgresql://USER@HOST/NEW_DB?sslmode=require" idc-library.dump
+   ```
+5. Check it, then point the backend at it (`SPRING_DATASOURCE_URL` on Render), or copy the rows you need across.
+
+Every few months, download one backup to somewhere outside GitHub (e.g. Google Drive), so one account isn't the
+only copy, and try a restore so you know it works.
 
 ## Check it locally
 ```bash
