@@ -15,7 +15,7 @@ export const LOAN_PERIOD_DAYS = [7, 14, 21] as const;
 export const DEFAULT_LOAN_DAYS = 14;
 
 /** Category picked first when adding a new title. */
-export const DEFAULT_CATEGORY = 'Christian living';
+export const DEFAULT_CATEGORY = 'Christian Living';
 
 export const COPY_CONDITIONS: readonly ChoiceOption<CopyCondition>[] = [
   { value: 'NEW', label: 'New' },

@@ -158,7 +158,7 @@ Permission keys:
 | Invitation link | 7 days, single use |
 | Password reset link | 30 minutes |
 | Lockout | 5 failed sign-ins, 15 minutes |
-| Categories | Bible & study, Devotional, Christian living, Theology, Biography, Children, Classics, Apologetics, Hymnals & music, Other |
+| Categories | Bible Study & Doctrine, Biography & Testimony, Christian Living, Church & Ministry, Evangelism & Missions, Leadership, Marriage, Family & Relationships, Prayer & Worship, Society & Culture (from the church spreadsheet, migration 012) |
 
 ## 6. Data model
 
