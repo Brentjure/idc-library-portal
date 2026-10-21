@@ -31,7 +31,7 @@ Environment variables:
 | `SPRING_DATASOURCE_USERNAME` | the Neon user |
 | `SPRING_DATASOURCE_PASSWORD` | the Neon password |
 | `APP_JWT_SECRET` | 32+ random bytes, e.g. `openssl rand -base64 32` |
-| `APP_PORTAL_URL` | the portal address from step 3, e.g. `https://idc-library.pages.dev` |
+| `APP_PORTAL_URL` | the portal address from step 3: `https://idc-library-portal.pages.dev` (base only). Invitation links and CORS use it. |
 
 The `prod` profile has no defaults for these. The app won't start if one is missing.
 
