@@ -59,6 +59,37 @@ New staff join through **Users → Invite**, which produces a link `{APP_PORTAL_
 | M2 | **Signing out doesn't revoke the token** | A token copied before sign-out keeps working until it expires | Add a `token_version` per user, checked on each request (it's already read from the database), and raised on sign-out, password change and "sign out everywhere". |
 | M3 | **The backend uses the database owner (`neondb_owner`)** | A backend bug or injection could drop or alter tables | Create a role with only `SELECT/INSERT/UPDATE/DELETE` on the tables and sequence use; keep the owner for migrations only. |
 | M4 | **No audit log for admin actions** | Can't tell who changed roles, deleted a book or invited someone | An `audit_events` table (who, what, when, before/after) written by the user, role, book and member services; a simple page in Settings. |
+| M5 | **Sign-ins on several devices or browsers at once aren't tracked** | See "Simultaneous sign-ins" below | See below; builds on M2. |
+
+### Simultaneous sign-ins (M5)
+
+**Today:** every sign-in issues its own independent token. The same account can be signed in on the desk PC, a phone
+and a second browser at the same time, and the server keeps no list of them. So:
+
+- nobody can see where an account is signed in;
+- signing out on one device leaves the others signed in, and there's no "sign out everywhere" (M2);
+- a session left open on the desk PC, or a stolen token, looks exactly like the real user, and nothing alerts anyone;
+- two people sharing one account (e.g. one desk login for several volunteers) can't be told apart, so the loan
+  records' "issued by" means little.
+
+**Options:**
+
+| Option | Behaviour | Fits the desk? |
+|---|---|---|
+| A. Track sessions, allow several (recommended) | A `user_sessions` table: id, user, browser/device, IP, created, last seen, revoked. The token carries the session id; each request checks it isn't revoked (it's already read with the user). A "Where you're signed in" list with **Sign out** per device and **Sign out everywhere**; admins can do the same for any user from Users. Optional cap, e.g. 3 active sessions, oldest signed out first. | Yes: staff often use the desk PC and their own phone. |
+| B. One session per user | A new sign-in ends the previous one (raise `token_version`). | Strict, but volunteers would sign each other out if they share a PC browser, and switching between phone and PC means signing in again each time. |
+| C. Allow freely, just notify | Email the user when their account signs in from a new browser. | Needs the email provider, which isn't chosen yet. Good addition to A later. |
+
+**Also:** one account per person, no shared desk logins, so every loan, return and donation records who did it. State
+this when inviting staff.
+
+**Acceptance (option A):**
+1. Signing in on two browsers shows two entries under "Where you're signed in", each with browser, approximate
+   location (IP) and last activity.
+2. **Sign out** on one entry ends that session within one request; the other keeps working.
+3. **Sign out everywhere** ends every session, including the current one.
+4. Disabling a user or changing their password ends all their sessions.
+5. With the cap set, a 4th sign-in ends the oldest session, and the sign-in page says so.
 
 ### Low
 
@@ -82,5 +113,6 @@ New staff join through **Users → Invite**, which produces a link `{APP_PORTAL_
 
 1. Set `APP_PORTAL_URL` on Render (onboarding 1), restrict the Google Sheet (H3).
 2. Turnstile, sign-in lockout and the proxy secret header (H1 + H2), with the start-up check for `APP_PORTAL_URL`.
-3. Session hardening and revocation (M1 + M2).
+3. Session hardening, revocation and session tracking (M1 + M2 + M5). They share one change: a session id in the
+   token, checked on every request.
 4. Limited database role (M3), Dependabot (L1), audit log (M4).
