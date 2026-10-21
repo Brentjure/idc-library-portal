@@ -7,7 +7,7 @@
 </ng-template>
 
 <section class="card flex flex-wrap items-end gap-3" aria-label="Period">
-  <div class="min-w-0 flex-1">
+  <div class="min-w-[min(100%,26rem)] flex-1">
     <span class="field-label">Period</span>
     <div class="seg w-fit max-w-full overflow-x-auto" role="group" aria-label="Period">
       @for (p of presets; track p.value) {
@@ -97,7 +97,7 @@
       <ng-container *ngTemplateOutlet="downloadButton; context: { $implicit: 'unused' }" />
     </div>
     @if (unused().length) {
-      <div class="-mx-[18px] overflow-x-auto px-[18px]">
+      <div class="relative -mx-[18px] overflow-x-auto px-[18px]">
         <table class="tbl">
           <thead>
             <tr><th>Book</th><th>Category</th><th class="text-right">Copies</th><th>Last borrowed</th></tr>
