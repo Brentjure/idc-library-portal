@@ -146,6 +146,15 @@ export class MembersPageComponent {
     });
   }
 
+  protected extendBook(loan: Loan): void {
+    this.desk.openExtend({
+      memberId: loan.memberId,
+      memberName: loan.memberName,
+      memberPhone: loan.memberPhone,
+      transactionId: loan.transactionId,
+    });
+  }
+
   protected askRemove(detail: MemberDetail): void {
     this.removeError.set('');
     this.removing.set(detail);

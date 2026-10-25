@@ -135,7 +135,7 @@
             <td class="py-[11px] whitespace-nowrap text-ink-2 tabular-nums">
               {{ row.due }}
               @if (l.renewedCount > 0) {
-                <small class="block text-[11px] text-ink-3">Renewed</small>
+                <small class="block text-[11px] text-ink-3">Extended {{ l.renewedCount }}×</small>
               }
             </td>
             <td class="py-[11px] whitespace-nowrap text-ink-2 tabular-nums">
@@ -162,27 +162,26 @@
                   @if (auth.can('loans.return')) {
                     <button type="button" class="act" (click)="returnBook(l)">Return</button>
                   }
-                  @if (row.state.late) {
-                    @if (auth.can('loans.remind')) {
-                      <button
-                        type="button"
-                        class="act"
-                        [class]="row.reminded ? '' : 'act-bad'"
-                        [disabled]="busyId() === l.transactionId"
-                        (click)="remind(l)"
-                      >
-                        {{ row.reminded ? 'Copy again' : 'Copy reminder' }}
-                      </button>
-                    }
-                  } @else if (auth.can('loans.renew')) {
+                  @if (auth.can('loans.renew')) {
                     <button
                       type="button"
                       class="act"
-                      [disabled]="!l.renewable || busyId() === l.transactionId"
-                      [attr.title]="l.renewable ? 'Add 2 weeks' : 'Already renewed'"
-                      (click)="renew(l)"
+                      [disabled]="!l.renewable"
+                      [attr.title]="l.renewable ? 'Give more time: 1 to 3 weeks' : 'No extensions left'"
+                      (click)="extend(l)"
                     >
-                      {{ busyId() === l.transactionId ? 'Renewing…' : l.renewable ? 'Renew' : 'Renewed' }}
+                      Extend
+                    </button>
+                  }
+                  @if (row.state.late && auth.can('loans.remind')) {
+                    <button
+                      type="button"
+                      class="act"
+                      [class]="row.reminded ? '' : 'act-bad'"
+                      [disabled]="busyId() === l.transactionId"
+                      (click)="remind(l)"
+                    >
+                      {{ row.reminded ? 'Copy again' : 'Copy reminder' }}
                     </button>
                   }
                 </div>

@@ -6,7 +6,7 @@
   @if (mode() === 'add' || mode() === 'edit') {
     <app-member-edit [form]="form" [groups]="groups()" (submitted)="save()" />
   } @else if (detail(); as d) {
-    <app-member-details [detail]="d" (returnRequested)="returnRequested.emit($event)" />
+    <app-member-details [detail]="d" (returnRequested)="returnRequested.emit($event)" (extendRequested)="extendRequested.emit($event)" />
   } @else if (loading()) {
     <p class="m-0 text-[13px] text-ink-3">Loading the member…</p>
   }

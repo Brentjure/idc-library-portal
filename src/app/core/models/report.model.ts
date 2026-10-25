@@ -1,7 +1,7 @@
 export interface ReportActivity {
   loans: number;
   returns: number;
-  /** Of the returns, those back on or before their due date. */
+  /** Of the returns, those back by the due date agreed at lending (an extension doesn't make a book on time). */
   onTimeReturns: number;
   /** Different members who borrowed at least once. */
   activeBorrowers: number;
@@ -9,6 +9,8 @@ export interface ReportActivity {
   donations: number;
   copiesDonated: number;
   copiesPurchased: number;
+  /** Loans extended in the period, one per extension. */
+  extensions: number;
 }
 
 export interface TimelinePoint {

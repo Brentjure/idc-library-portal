@@ -57,11 +57,16 @@
 
   <!-- 2. Books handed back -->
   <app-step [n]="2" heading="Books handed back" [subtitle]="listHint()" [done]="form.canSave()">
-    @if (form.loans().length > 1) {
-      <button stepAside type="button" class="link ml-auto text-[12.5px]" (click)="form.toggleAll()">
-        {{ form.allChosen() ? 'Clear all' : 'Select all' }}
-      </button>
-    }
+    <span stepAside class="ml-auto flex gap-3">
+      @if (form.loans().length && auth.can('loans.renew')) {
+        <button type="button" class="link text-[12.5px]" (click)="extendInstead()">Extend instead</button>
+      }
+      @if (form.loans().length > 1) {
+        <button type="button" class="link text-[12.5px]" (click)="form.toggleAll()">
+          {{ form.allChosen() ? 'Clear all' : 'Select all' }}
+        </button>
+      }
+    </span>
 
     @if (!form.borrower()) {
       <app-empty-state>Their books on loan will be listed here.</app-empty-state>

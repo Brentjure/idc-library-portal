@@ -1,13 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { Loan, ReturnCondition, ReturnedBook } from '../../core/models/loan.model';
 import { dueState } from '../../utils/dates';
-
-/** The person handing books back. memberId is null for old online requests made before members existed. */
-export interface Borrower {
-  memberId: number | null;
-  name: string;
-  phone: string | null;
-}
+import { Borrower } from '../desk/desk.service';
 
 /**
  * State and rules of the Return drawer: whose books are listed, which ones were handed back,

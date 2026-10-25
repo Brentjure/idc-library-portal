@@ -16,15 +16,21 @@ export interface Loan {
   copyId: number;
   bookCode: string;
   borrowedAt: string;
+  /** The current due date; extensions move it. */
   dueDate: string;
+  /** The due date agreed when the book was lent. */
+  originalDueDate: string;
   returnedAt: string | null;
   returnCondition: ReturnCondition | null;
   status: LoanStatus;
   daysLate: number;
+  /** Times the loan was extended. */
   renewedCount: number;
+  /** Extensions still allowed; 0 once returned. */
+  extensionsLeft: number;
   /** When staff last sent an overdue reminder for this book. */
   lastRemindedAt: string | null;
-  /** Still out, not overdue, and renewals left. */
+  /** Still out and extensions left. Overdue books can be extended too. */
   renewable: boolean;
 }
 
@@ -76,6 +82,13 @@ export interface NewLoan {
   memberId: number;
   titleIds: number[];
   dueDate: string;
+}
+
+/** More time for one member's books (POST /loans/extensions). */
+export interface ExtendLoans {
+  transactionIds: number[];
+  weeks: number;
+  note: string | null;
 }
 
 export interface ReturnedBook {

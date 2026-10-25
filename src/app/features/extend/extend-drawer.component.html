@@ -1,0 +1,102 @@
+<app-drawer
+  heading="Extend loan"
+  headingId="extend-heading"
+  hint="Give a member more time on their books, also when they're overdue."
+  icon="calendar"
+  [open]="isOpen()"
+  (closed)="cancel()"
+>
+  <ng-container drawerStats>
+    <span class="drawer-stat">{{ todayLabel }}</span>
+    <span class="drawer-stat">+1 to 3 weeks</span>
+  </ng-container>
+
+  @if (form.borrower(); as borrower) {
+    <app-member-line class="mb-1" [name]="borrower.name" [subtitle]="borrower.phone ? formatPhone(borrower.phone) : 'No phone on record'" />
+  }
+
+  <!-- 1. Which books -->
+  <app-step [n]="1" heading="Which books?" [subtitle]="listHint()" [done]="form.canSave()">
+    @if (loading()) {
+      <app-empty-state>Looking up their loans…</app-empty-state>
+    } @else if (!form.loans().length) {
+      <app-empty-state>{{ form.borrower()?.name ?? 'This member' }} has no books on loan.</app-empty-state>
+    } @else {
+      <ul class="m-0 flex list-none flex-col gap-2 p-0">
+        @for (loan of form.loans(); track loan.transactionId) {
+          @let ticked = form.selected().has(loan.transactionId);
+          @let due = dueState(loan.dueDate);
+          @let allowed = form.canExtend(loan);
+          <li class="item" [class.ticked]="ticked" [class.late]="due.late" [class.used-up]="!allowed">
+            <label class="flex items-center gap-2.5 px-3 py-2.5" [class.cursor-pointer]="allowed">
+              <input
+                type="checkbox"
+                class="m-0 size-[18px] flex-none accent-gold-deep"
+                [checked]="ticked"
+                [disabled]="!allowed"
+                (change)="form.toggle(loan)"
+              />
+              <app-book-line [title]="loan.title" [subtitle]="loan.bookCode + ' · due ' + formatShort(loan.dueDate)">
+                <span class="pill" [class]="due.pillClass">{{ due.text }}</span>
+              </app-book-line>
+            </label>
+            <p class="m-0 pr-3 pb-2.5 pl-[42px] text-[11.5px]" [class]="allowed ? 'text-ink-3' : 'text-bad'">
+              @if (!allowed) {
+                No extensions left. It needs to come back.
+              } @else if (ticked) {
+                New due date <b class="text-ink">{{ formatShort(form.newDueDate(loan)) }}</b>
+                {{ form.isOverdue(loan) ? '· counted from today' : '' }}
+              } @else {
+                {{ loan.extensionsLeft === 1 ? '1 extension left' : loan.extensionsLeft + ' extensions left' }}
+              }
+            </p>
+          </li>
+        }
+      </ul>
+    }
+  </app-step>
+
+  <!-- 2. How much longer -->
+  <app-step [n]="2" heading="How much longer?" subtitle="Overdue books get the time from today">
+    <app-choice-chips label="Extra time" [options]="weekOptions" [value]="form.weeks()" (valueChange)="form.weeks.set($event ?? form.weeks())" />
+    <div class="mt-3">
+      <label class="field-label" for="extend-note">Note <span class="font-normal text-ink-3">(optional)</span></label>
+      <textarea
+        id="extend-note"
+        class="field-input min-h-[60px] py-2"
+        maxlength="255"
+        placeholder="e.g. asked by phone, still reading"
+        [value]="form.note()"
+        (input)="setNote($event)"
+      ></textarea>
+    </div>
+  </app-step>
+
+  <ng-container drawerFooter>
+    <div class="w-full text-xs text-ink-3" aria-live="polite">
+      @if (error()) {
+        <app-alert>{{ error() }}</app-alert>
+      } @else if (!form.canSave()) {
+        Tick at least one book
+      } @else {
+        @let count = form.chosen().length;
+        <app-summary-tile
+          label="Extend"
+          [value]="count"
+          [caption]="count === 1 ? 'book' : 'books'"
+          [title]="'Due back ' + formatShort(form.dueBack()!)"
+        >
+          @if (form.overdueCount()) {
+            <span class="text-bad">{{ plural(form.overdueCount(), 'book') }} overdue now</span>
+          } @else {
+            +{{ plural(form.weeks(), 'week') }} for {{ form.firstName() }}
+          }
+        </app-summary-tile>
+      }
+    </div>
+    <button type="button" class="btn mr-auto max-[480px]:mr-0 max-[480px]:flex-1" (click)="cancel()">Cancel</button>
+    <button type="button" class="btn btn-primary max-[480px]:flex-1" [disabled]="!form.canSave() || saving()" (click)="save()">
+      {{ saving() ? 'Saving…' : 'Extend' }}
+    </button>
+  </ng-container>
+</app-drawer>

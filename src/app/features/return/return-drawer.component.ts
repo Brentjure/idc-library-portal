@@ -10,15 +10,16 @@ import { ToastService } from '../../components/toast/toast.service';
 import { TypeaheadComponent } from '../../components/typeahead/typeahead.component';
 import { errorMessage } from '../../core/api/api-client.service';
 import { LoansApi } from '../../core/api/loans.api';
+import { AuthService } from '../../core/auth/auth.service';
 import { Loan } from '../../core/models/loan.model';
 import { Member } from '../../core/models/member.model';
 import { dueState, formatMedium, today } from '../../utils/dates';
 import { formatPhone, plural } from '../../utils/format';
-import { DeskService, ReturnPrefill } from '../desk/desk.service';
+import { Borrower, DeskService, ReturnPrefill } from '../desk/desk.service';
 import { MemberPickerComponent } from '../desk/member-picker/member-picker.component';
 import { SummaryStore } from '../desk/summary.store';
 import { LoanChecklistComponent } from './loan-checklist/loan-checklist.component';
-import { Borrower, ReturnForm } from './return.form';
+import { ReturnForm } from './return.form';
 
 type FindBy = 'member' | 'book';
 
@@ -42,6 +43,7 @@ const FIND_BY_OPTIONS: ChoiceOption<FindBy>[] = [
 })
 export class ReturnDrawerComponent {
   protected readonly desk = inject(DeskService);
+  protected readonly auth = inject(AuthService);
   protected readonly summary = inject(SummaryStore);
   private readonly loansApi = inject(LoansApi);
   private readonly toast = inject(ToastService);
@@ -108,6 +110,20 @@ export class ReturnDrawerComponent {
   protected onLoanPicked(loan: Loan): void {
     this.bookSearchText.set(`${loan.title} · ${loan.bookCode}`);
     this.showBorrowerOf(loan);
+  }
+
+  /** The member wants more time rather than handing the books back: switch to the Extend drawer. */
+  protected extendInstead(): void {
+    const borrower = this.form.borrower();
+    if (!borrower) return;
+    const loan = this.form.chosen()[0] ?? this.form.loans()[0];
+    this.clearSearch();
+    this.desk.openExtend({
+      memberId: borrower.memberId,
+      memberName: borrower.name,
+      memberPhone: borrower.phone,
+      transactionId: loan.transactionId,
+    });
   }
 
   protected cancel(): void {

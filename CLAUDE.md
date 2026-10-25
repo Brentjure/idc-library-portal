@@ -28,7 +28,7 @@ src/app/
   utils/       pure functions (dates.ts, format.ts), each with a spec
   components/  reusable UI that knows nothing about the library, one folder per component
   features/    one folder per business module: shell, login, overview, books, desk (shared desk state),
-               borrow, return, donate. The module's main component sits in the folder;
+               borrow, return, extend, donate. The module's main component sits in the folder;
                its child components get subfolders.
 ```
 - **Naming:** `name.component.ts` / `.html` (and `.css` only if needed), class `NameComponent`, selector `app-name`. Services `*.service.ts`, API services `*.api.ts`, form state `*.form.ts`, models `*.model.ts`.

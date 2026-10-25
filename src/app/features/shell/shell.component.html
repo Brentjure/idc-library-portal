@@ -22,4 +22,7 @@
 @if (auth.can('donations.record')) {
   <app-donate-drawer />
 }
+@if (auth.can('loans.renew')) {
+  <app-extend-drawer />
+}
 <app-toast />

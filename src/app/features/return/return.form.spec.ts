@@ -3,11 +3,12 @@ import { addDays, isoDate, today } from '../../utils/dates';
 import { ReturnForm } from './return.form';
 
 function loan(transactionId: number, dueInDays: number): Loan {
+  const dueDate = isoDate(addDays(today(), dueInDays));
   return {
     transactionId, memberId: 1, memberName: 'Grace Mensah', memberPhone: null, titleId: 1, title: 'Book',
     author: 'A', categoryName: null, copyId: transactionId, bookCode: `BK-${transactionId}`,
-    borrowedAt: '2026-10-01T10:00:00', dueDate: isoDate(addDays(today(), dueInDays)), returnedAt: null,
-    returnCondition: null, status: 'ON_LOAN', daysLate: 0, renewedCount: 0, lastRemindedAt: null, renewable: true,
+    borrowedAt: '2026-10-01T10:00:00', dueDate, originalDueDate: dueDate, returnedAt: null,
+    returnCondition: null, status: 'ON_LOAN', daysLate: 0, renewedCount: 0, extensionsLeft: 2, lastRemindedAt: null, renewable: true,
   };
 }
 

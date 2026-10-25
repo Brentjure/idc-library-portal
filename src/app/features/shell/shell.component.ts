@@ -6,6 +6,7 @@ import { ToastComponent } from '../../components/toast/toast.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { BorrowDrawerComponent } from '../borrow/borrow-drawer.component';
 import { DonateDrawerComponent } from '../donate/donate-drawer.component';
+import { ExtendDrawerComponent } from '../extend/extend-drawer.component';
 import { ReturnDrawerComponent } from '../return/return-drawer.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopBarComponent } from './top-bar/top-bar.component';
@@ -20,7 +21,7 @@ const SLIM_KEY = 'idc.library.sidebar.slim';
   selector: 'app-shell',
   imports: [
     RouterOutlet, SidebarComponent, TopBarComponent, ToastComponent,
-    BorrowDrawerComponent, ReturnDrawerComponent, DonateDrawerComponent,
+    BorrowDrawerComponent, ReturnDrawerComponent, DonateDrawerComponent, ExtendDrawerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.component.html',

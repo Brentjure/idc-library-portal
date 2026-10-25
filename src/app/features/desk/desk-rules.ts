@@ -14,6 +14,14 @@ export const MAX_BOOKS_PER_MEMBER = 5;
 export const LOAN_PERIOD_DAYS = [7, 14, 21] as const;
 export const DEFAULT_LOAN_DAYS = 14;
 
+/** How much longer staff can give a member on a book, in weeks, and the choice picked first. */
+export const EXTENSION_WEEKS: readonly ChoiceOption<number>[] = [
+  { value: 1, label: '+1 week' },
+  { value: 2, label: '+2 weeks' },
+  { value: 3, label: '+3 weeks' },
+];
+export const DEFAULT_EXTENSION_WEEKS = 2;
+
 /** Category picked first when adding a new title. */
 export const DEFAULT_CATEGORY = 'Christian Living';
 

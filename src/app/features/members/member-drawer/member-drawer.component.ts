@@ -41,6 +41,7 @@ export class MemberDrawerComponent {
   readonly removeRequested = output<MemberDetail>();
   readonly lendRequested = output<DirectoryMember>();
   readonly returnRequested = output<Loan>();
+  readonly extendRequested = output<Loan>();
 
   protected readonly detail = signal<MemberDetail | null>(null);
   protected readonly mode = signal<Mode>('view');

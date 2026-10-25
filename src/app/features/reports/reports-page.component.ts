@@ -63,7 +63,11 @@ export class ReportsPageComponent {
       {
         label: 'Back on time',
         value: percent(a.onTimeReturns, a.returns),
-        change: { text: a.returns ? `${a.onTimeReturns} of ${a.returns} returns` : 'no returns yet', direction: 'same' as const },
+        change: {
+          text: (a.returns ? `${a.onTimeReturns} of ${a.returns} returns` : 'no returns yet') +
+            (a.extensions ? ` · ${plural(a.extensions, 'extension')}` : ''),
+          direction: 'same' as const,
+        },
       },
       { label: 'Active borrowers', value: String(a.activeBorrowers), change: change(a.activeBorrowers, p.activeBorrowers) },
       { label: 'New members', value: String(a.newMembers), change: change(a.newMembers, p.newMembers) },

@@ -42,6 +42,9 @@
         <li class="rounded-xl border border-line px-3 py-2.5" [class.border-l-[3px]]="row.state.late" [class.border-l-bad]="row.state.late">
           <app-book-line [title]="row.loan.title" [subtitle]="row.loan.bookCode + ' · due ' + row.due">
             <span class="pill flex-none" [class]="row.state.pill">{{ row.state.text }}</span>
+            @if (auth.can('loans.renew') && row.loan.renewable) {
+              <button type="button" class="btn btn-sm ml-1 flex-none" (click)="extendRequested.emit(row.loan)">Extend</button>
+            }
             @if (auth.can('loans.return')) {
               <button type="button" class="btn btn-sm ml-1 flex-none" (click)="returnRequested.emit(row.loan)">Return</button>
             }

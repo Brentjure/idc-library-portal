@@ -10,7 +10,7 @@ import { errorMessage } from '../../core/api/api-client.service';
 import { LoansApi } from '../../core/api/loans.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { Loan, LoanSummary, RegisterPeriod, RegisterSort, RegisterTab } from '../../core/models/loan.model';
-import { formatDayMonth, formatShort, today } from '../../utils/dates';
+import { formatDayMonth, today } from '../../utils/dates';
 import { formatPhone, plural } from '../../utils/format';
 import { DeskService } from '../desk/desk.service';
 import { PERIODS, SORTS, TABS, defaultSort, loanState, remindedLabel, reminderMessage, tabFromSlug } from './loan-register';
@@ -26,7 +26,8 @@ interface ManualReminder {
 
 /**
  * Every loan: totals, tabs (On loan, Overdue, Returned, All), search, filters and sort, 25 rows at a time.
- * Rows can be returned (opens the return drawer), renewed once, or get a copied overdue reminder.
+ * Rows can be returned (opens the return drawer), extended (opens the extend drawer), or get a copied overdue
+ * reminder.
  */
 @Component({
   selector: 'app-loans-page',
@@ -64,7 +65,7 @@ export class LoansPageComponent {
   protected readonly loading = signal(true);
   protected readonly loadingMore = signal(false);
   protected readonly error = signal('');
-  /** The row whose Renew or Copy reminder is running. */
+  /** The row whose Copy reminder is running. */
   protected readonly busyId = signal<number | null>(null);
   protected readonly manualReminder = signal<ManualReminder | null>(null);
 
@@ -160,19 +161,13 @@ export class LoansPageComponent {
     });
   }
 
-  protected async renew(loan: Loan): Promise<void> {
-    if (this.busyId() !== null) return;
-    this.busyId.set(loan.transactionId);
-    try {
-      const renewed = await this.loansApi.renew(loan.transactionId);
-      this.replace(renewed);
-      this.toast.show(`Renewed “${renewed.title}” for ${firstName(renewed)}. Now due back ${formatShort(renewed.dueDate)}.`);
-      void this.loadSummary();
-    } catch (err) {
-      this.toast.show(errorMessage(err, 'Couldn’t renew this book. Please try again.'));
-    } finally {
-      this.busyId.set(null);
-    }
+  protected extend(loan: Loan): void {
+    this.desk.openExtend({
+      memberId: loan.memberId,
+      memberName: loan.memberName,
+      memberPhone: loan.memberPhone,
+      transactionId: loan.transactionId,
+    });
   }
 
   /** Copies the reminder text, then records that it was sent. Without clipboard access, shows it to copy by hand. */

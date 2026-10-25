@@ -3,9 +3,16 @@ import { Book } from '../../core/models/book.model';
 import { DonationSource } from '../../core/models/donation.model';
 import { Member } from '../../core/models/member.model';
 
-export type DeskDrawer = 'borrow' | 'return' | 'donate' | null;
+export type DeskDrawer = 'borrow' | 'return' | 'donate' | 'extend' | null;
 
-/** What the return drawer should show when opened from a "Return" button on a loan. */
+/** The person who has the books. memberId is null for old online requests made before members existed. */
+export interface Borrower {
+  memberId: number | null;
+  name: string;
+  phone: string | null;
+}
+
+/** What the return or extend drawer should show when opened from a button on a loan. */
 export interface ReturnPrefill {
   memberId: number | null;
   memberName: string;
@@ -22,6 +29,7 @@ export class DeskService {
   readonly open = signal<DeskDrawer>(null);
   readonly donateSource = signal<DonationSource>('DONATION');
   readonly returnPrefill = signal<ReturnPrefill | null>(null);
+  readonly extendPrefill = signal<ReturnPrefill | null>(null);
   /** A book to add to the borrow list once the member is chosen ("Borrow this book" on the Books page). */
   readonly borrowPrefill = signal<Book | null>(null);
   /** A member to start the borrow drawer with ("Lend books" on the Members page). */
@@ -37,6 +45,12 @@ export class DeskService {
   openReturn(prefill: ReturnPrefill | null = null): void {
     this.returnPrefill.set(prefill);
     this.open.set('return');
+  }
+
+  /** Extend: always about one member's books, opened from a loan. */
+  openExtend(prefill: ReturnPrefill): void {
+    this.extendPrefill.set(prefill);
+    this.open.set('extend');
   }
 
   openDonate(source: DonationSource): void {

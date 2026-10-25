@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Loan, LoanPage, LoanQuery, LoanSummary, NewLoan, RegisterQuery, ReturnedBook } from '../models/loan.model';
+import { ExtendLoans, Loan, LoanPage, LoanQuery, LoanSummary, NewLoan, RegisterQuery, ReturnedBook } from '../models/loan.model';
 import { ApiClient } from './api-client.service';
 
 /** /api/v1/loans and /api/v1/returns */
@@ -20,9 +20,9 @@ export class LoansApi {
     return this.api.get('/loans/summary');
   }
 
-  /** Fails with 409 when the book is back, overdue or already renewed. */
-  renew(transactionId: number): Promise<Loan> {
-    return this.api.post(`/loans/${transactionId}/renew`, {});
+  /** Gives one member more time on their books. 409 when a book is back or was already extended the most times. */
+  extend(request: ExtendLoans): Promise<Loan[]> {
+    return this.api.post('/loans/extensions', request);
   }
 
   /** Records that an overdue reminder was sent. */

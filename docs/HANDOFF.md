@@ -101,9 +101,18 @@ Footer: summary with a due-date card, **Save & next member** (keeps the drawer o
 - Columns: Member + phone · Book + code · Borrowed · Due · Returned · Status (with "On time" / "N days late" note).
 - Actions:
   - **Return** (opens the return drawer prefilled)
-  - **Renew** (+14 days, once, not when overdue)
+  - **Extend** (opens the Extend drawer; also on overdue rows, also from the Return drawer and a member's details)
   - **Copy reminder** on overdue rows (polite WhatsApp/SMS text)
 - "Show more" loads 25 rows at a time.
+
+### Extend drawer
+Opened from a loan: the Loans page row, **Extend instead** in the Return drawer, or a member's details.
+1. The member, and their books on loan as a checklist; the book it was opened for is ticked. Each line shows the
+   due pill and "N extensions left"; books with none left can't be ticked ("It needs to come back").
+2. **How much longer?** +1 / +2 / +3 weeks (default +2), and an optional note ("asked by phone").
+3. Each ticked book shows its new due date ("counted from today" when overdue); the footer says "Due back …".
+Saving moves the due date, adds one to the count, clears the reminder and records the extension. Not yet covered:
+reservations (no check whether someone is waiting for the book), fines, and telling the member by SMS/email.
 
 ### Members (admin only)
 - Agreed 2026-10-17 (there was no mockup). Visible only with `members.list` (ADMIN). Librarians keep `members.view` / `members.manage` for the desk drawers but don't see the tab.
@@ -153,7 +162,7 @@ Permission keys:
 |---|---|
 | Books per member | 5 |
 | Loan period | 14 days default (7 / 21 options) |
-| Renewal | once, +14 days, not when overdue |
+| Extension | +1, +2 or +3 weeks, at most 2 times per loan, also when overdue. Overdue books get the time from today, others from their due date. "Back on time" in Reports is measured against the original due date. |
 | Late fees | none shown (decision: don't display fees) |
 | Invitation link | 7 days, single use |
 | Password reset link | 30 minutes |
@@ -176,7 +185,8 @@ Existing tables: `book_titles`, `book_copies`. Migration drafted in `docs/db/don
   - `deleted_at` for soft delete (delete = set `deleted_at` and mark copies `WITHDRAWN`).
 - **donations:** `member_id` (nullable), `donor_name`, `donor_phone` (nullable), `is_anonymous`, `received_by`, `received_at`.
   - Purchases are copies with `donation_id IS NULL`. Optionally add a `purchases` table if the church tracks supplier/cost.
-- **loans** (to design): `copy_id` → book_copies, `member_id`, `borrowed_at`, `due_at`, `returned_at`, `return_condition`, `renewed_count`, `last_reminded_at`, `recorded_by`, `returned_by`.
+- **loans** are `borrow_transactions`: `borrowed_at`, `due_date` (current), `original_due_date` (agreed at lending, never changes), `returned_at`, `return_condition`, `renewed_count` (times extended), `last_reminded_at`, `recorded_by`, `returned_by`.
+- **loan_extensions** (migration 013): one row per extension: `borrow_transaction_id`, `previous_due_date`, `new_due_date`, `was_overdue`, `extended_by`, `extended_at`, `note`.
 - **members** (to design): name, phone, ministry/group, active flag.
 - **users:**
   - `email` (unique), `password_hash` (null until set up), `role_id`, `status` (`INVITED | ACTIVE | DISABLED`), `last_login_at`

@@ -22,6 +22,7 @@ export class MemberDetailsComponent {
 
   readonly detail = input.required<MemberDetail>();
   readonly returnRequested = output<Loan>();
+  readonly extendRequested = output<Loan>();
 
   private readonly today = today();
   protected readonly maxBooks = MAX_BOOKS_PER_MEMBER;
