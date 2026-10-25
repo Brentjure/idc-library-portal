@@ -8,7 +8,8 @@ const COUNT_MS = 700;
 /**
  * A headline number with a label, e.g. "Borrowed Now · 6 · Books out".
  * `highlight` gives it the soft gold background; `alert` shows the number in red when above zero.
- * The number counts up when it first loads and pulses when it changes later (both skipped with reduced motion).
+ * The number counts up when it first loads (unless `countUp` is off) and pulses when it changes later. Both are
+ * skipped with reduced motion.
  */
 @Component({
   selector: 'app-kpi-card',
@@ -30,6 +31,8 @@ export class KpiCardComponent {
   readonly caption = input('');
   readonly highlight = input(false);
   readonly alert = input(false);
+  /** Count up from 0 when the number first arrives. Off: show it straight away (later changes still pulse). */
+  readonly countUp = input(true);
 
   /** What is on screen right now; trails `value` while counting. */
   protected readonly shown = signal<number | undefined>(undefined);
@@ -52,7 +55,7 @@ export class KpiCardComponent {
   private animateTo(target: number | undefined): void {
     cancelAnimationFrame(this.frame);
     const from = this.shown();
-    if (target === undefined || from === target || reducedMotion()) {
+    if (target === undefined || from === target || reducedMotion() || (from === undefined && !this.countUp())) {
       this.shown.set(target);
       return;
     }

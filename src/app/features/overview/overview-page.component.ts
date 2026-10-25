@@ -14,7 +14,18 @@ import { NeedsAttentionComponent } from './needs-attention/needs-attention.compo
   host: { class: 'flex flex-col gap-[18px]' },
 })
 export class OverviewPageComponent {
+  private static introPlayed = false;
+
   protected readonly summary = inject(SummaryStore).summary;
+  /**
+   * The staggered entrance and count-up play on the first visit only. Coming back later, the router's page
+   * transition is enough (see "Page transitions" in styles.css).
+   */
+  protected readonly intro = !OverviewPageComponent.introPlayed;
+
+  constructor() {
+    OverviewPageComponent.introPlayed = true;
+  }
 
   protected readonly titlesCaption = computed(() => {
     const titles = this.summary()?.titles;
