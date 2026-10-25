@@ -54,6 +54,7 @@ src/app/
   - Tailwind classes in templates.
   - `src/styles.css` holds only theme tokens and classes used by several components (`btn`, `field-input`, `card`, `pill-*`, `seg`, `tbl`, …).
   - A class used by one component goes in that component's `.css`, which starts with `@reference "<relative path>/styles.css";`.
+  - Page changes animate through the router's View Transitions (`.page-view` in the shell, "Page transitions" in `styles.css`). Don't add per-page enter animations on top of it.
   - A horizontal scroller around a table is `relative overflow-x-auto`. Without `relative`, absolutely positioned children (`sr-only` labels such as an "Actions" header) escape it and widen the whole page on phones.
 - **No barrel files (`index.ts`).** Import from the real file.
 - **Verify with:** `npx ng build`, `npx ng test --watch=false`, and a click-through of the desk flows.

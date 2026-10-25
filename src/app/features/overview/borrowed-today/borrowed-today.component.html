@@ -68,7 +68,7 @@
       } @else {
         @for (loan of rows(); track loan.transactionId) {
           @let state = status(loan);
-          <tr>
+          <tr [class.animate-flash]="fresh().has(rowKey(loan))">
             <td><app-member-line class="min-w-[150px]" [name]="loan.memberName" [subtitle]="formatPhone(loan.memberPhone)" /></td>
             <td class="min-w-[150px]">
               <b class="block leading-tight font-semibold">{{ loan.title }}</b>

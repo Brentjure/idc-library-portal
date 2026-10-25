@@ -5,8 +5,16 @@
   {{ label() }}
 </div>
 <div>
-  <div class="num font-display text-2xl leading-none font-bold" [class.text-bad]="alert() && !!value()">
-    {{ value() ?? '–' }}
+  <div
+    class="num origin-left font-display text-2xl leading-none font-bold"
+    aria-hidden="true"
+    [class.text-bad]="alert() && !!value()"
+    [class.animate-bump]="bumping()"
+    (animationend)="bumpDone()"
+  >
+    {{ shown() ?? '–' }}
   </div>
+  <!-- Screen readers get the final number, not every step of the count. -->
+  <span class="sr-only">{{ value() ?? 'Loading' }}</span>
   <div class="mt-1 text-[11.5px] text-ink-3">{{ caption() }}</div>
 </div>

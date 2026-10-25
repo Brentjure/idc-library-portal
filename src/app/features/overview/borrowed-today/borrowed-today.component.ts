@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Loan } from '../../../core/models/loan.model';
 import { formatDayMonth, formatLong, formatTime, isoDate, today } from '../../../utils/dates';
 import { formatPhone, plural } from '../../../utils/format';
+import { freshKeys } from '../../../utils/motion';
 import { DeskService } from '../../desk/desk.service';
 
 type StatusFilter = 'all' | 'loan' | 'returned';
@@ -39,6 +40,9 @@ export class BorrowedTodayComponent {
   protected readonly error = signal('');
   protected readonly filter = signal<StatusFilter>('all');
   protected readonly search = signal('');
+  /** Rows lent or returned since the last load; they flash once so the librarian sees the save land. */
+  protected readonly fresh = signal<ReadonlySet<string>>(new Set());
+  private seen: Set<string> | null = null;
 
   protected readonly filters = FILTERS;
   protected readonly todayLabel = formatLong(today());
@@ -65,6 +69,11 @@ export class BorrowedTodayComponent {
       this.desk.changes();
       untracked(() => void this.load());
     });
+  }
+
+  /** Changes when a loan is lent or returned, so either flashes the row. */
+  protected rowKey(loan: Loan): string {
+    return `${loan.transactionId}:${loan.returnedAt ? 'back' : 'out'}`;
   }
 
   protected status(loan: Loan): { text: string; pillClass: string } {
@@ -96,7 +105,13 @@ export class BorrowedTodayComponent {
       return;
     }
     try {
-      this.loans.set(await this.loansApi.find({ borrowedOn: isoDate(today()), limit: 200 }));
+      const loans = await this.loansApi.find({ borrowedOn: isoDate(today()), limit: 200 });
+      const keys = loans.map((loan) => this.rowKey(loan));
+      this.fresh.set(freshKeys(this.seen, keys));
+      this.seen = new Set(keys);
+      // Forget them after the flash, so filtering later doesn't replay it.
+      if (this.fresh().size) setTimeout(() => this.fresh.set(new Set()), 2600);
+      this.loans.set(loans);
       this.error.set('');
     } catch (err) {
       this.error.set(errorMessage(err, "Couldn't load today's loans."));

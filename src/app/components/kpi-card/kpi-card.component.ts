@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { countStep } from '../../utils/motion';
 import { IconComponent } from '../icon/icon.component';
 import { IconName } from '../icon/icons';
+
+const COUNT_MS = 700;
 
 /**
  * A headline number with a label, e.g. "Borrowed Now · 6 · Books out".
  * `highlight` gives it the soft gold background; `alert` shows the number in red when above zero.
+ * The number counts up when it first loads and pulses when it changes later (both skipped with reduced motion).
  */
 @Component({
   selector: 'app-kpi-card',
@@ -26,4 +30,47 @@ export class KpiCardComponent {
   readonly caption = input('');
   readonly highlight = input(false);
   readonly alert = input(false);
+
+  /** What is on screen right now; trails `value` while counting. */
+  protected readonly shown = signal<number | undefined>(undefined);
+  protected readonly bumping = signal(false);
+
+  private frame = 0;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => cancelAnimationFrame(this.frame));
+    effect(() => {
+      const target = this.value();
+      untracked(() => this.animateTo(target));
+    });
+  }
+
+  protected bumpDone(): void {
+    this.bumping.set(false);
+  }
+
+  private animateTo(target: number | undefined): void {
+    cancelAnimationFrame(this.frame);
+    const from = this.shown();
+    if (target === undefined || from === target || reducedMotion()) {
+      this.shown.set(target);
+      return;
+    }
+    if (from !== undefined) {
+      // A later change (e.g. after a desk save): restart the pulse.
+      this.bumping.set(false);
+      requestAnimationFrame(() => this.bumping.set(true));
+    }
+    const start = performance.now(), origin = from ?? 0;
+    const step = (now: number) => {
+      const t = (now - start) / COUNT_MS;
+      this.shown.set(countStep(origin, target, t));
+      if (t < 1) this.frame = requestAnimationFrame(step);
+    };
+    this.frame = requestAnimationFrame(step);
+  }
+}
+
+function reducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }

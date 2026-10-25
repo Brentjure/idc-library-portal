@@ -8,7 +8,10 @@
 
   <main class="flex min-w-0 flex-col gap-[18px] px-4 pt-[18px] pb-8 min-[861px]:px-7">
     <app-top-bar [title]="pageHeading()" (openMenu)="mobileMenuOpen.set(true)" />
-    <router-outlet />
+    <!-- The page content animates on navigation (styles.css, "Page transitions"); the rest stays still. -->
+    <div class="page-view">
+      <router-outlet />
+    </div>
   </main>
 </div>
 

@@ -1,11 +1,12 @@
+<!-- Cards rise in one after another (animate-rise + animation-delay); skipped with reduced motion. -->
 <section class="grid grid-cols-2 gap-3 min-[481px]:gap-3.5 min-[1281px]:grid-cols-4" aria-label="Library at a glance">
-  <app-kpi-card label="Total Books" icon="book" [value]="summary()?.copiesInStock" [caption]="titlesCaption()" [highlight]="true" />
-  <app-kpi-card label="Active Members" icon="users" caption="Members on record" [value]="summary()?.activeMembers" />
-  <app-kpi-card label="Borrowed Now" icon="bookOpen" caption="Books out" [value]="summary()?.borrowedNow" />
-  <app-kpi-card label="Overdue Returns" icon="clock" caption="Past their due date" [value]="summary()?.overdue" [alert]="true" />
+  <app-kpi-card class="animate-rise" label="Total Books" icon="book" [value]="summary()?.copiesInStock" [caption]="titlesCaption()" [highlight]="true" />
+  <app-kpi-card class="animate-rise [animation-delay:60ms]" label="Active Members" icon="users" caption="Members on record" [value]="summary()?.activeMembers" />
+  <app-kpi-card class="animate-rise [animation-delay:120ms]" label="Borrowed Now" icon="bookOpen" caption="Books out" [value]="summary()?.borrowedNow" />
+  <app-kpi-card class="animate-rise [animation-delay:180ms]" label="Overdue Returns" icon="clock" caption="Past their due date" [value]="summary()?.overdue" [alert]="true" />
 </section>
 
 <div class="grid items-start gap-[18px] min-[1151px]:grid-cols-[minmax(0,1fr)_minmax(0,320px)]">
-  <app-borrowed-today [checkedInToday]="summary()?.returnedToday ?? 0" />
-  <app-needs-attention [overdue]="summary()?.overdue ?? 0" [unlabelled]="summary()?.unlabelledCopies ?? 0" />
+  <app-borrowed-today class="animate-rise [animation-delay:240ms]" [checkedInToday]="summary()?.returnedToday ?? 0" />
+  <app-needs-attention class="animate-rise [animation-delay:300ms]" [overdue]="summary()?.overdue ?? 0" [unlabelled]="summary()?.unlabelledCopies ?? 0" />
 </div>
