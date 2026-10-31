@@ -7,7 +7,7 @@ import { ToastService } from '../../../components/toast/toast.service';
 import { ApiError, errorMessage } from '../../../core/api/api-client.service';
 import { UsersApi } from '../../../core/api/users.api';
 import { InvitationLink, RoleOption, StaffUser } from '../../../core/models/user.model';
-import { formatDate } from '../../../utils/dates';
+import { formatDate, formatTime } from '../../../utils/dates';
 import { plural, roleLabel } from '../../../utils/format';
 import { invitationMessage, userStatus } from '../user-directory';
 import { UserField, UserForm } from '../user.form';
@@ -70,6 +70,7 @@ export class UserDrawerComponent {
     })),
   );
   protected readonly linkExpiry = computed(() => (this.link() ? formatDate(this.link()!.expiresAt) : ''));
+  protected readonly lockedUntilTime = computed(() => (this.user()?.lockedUntil ? formatTime(this.user()!.lockedUntil!) : ''));
   protected readonly message = computed(() => {
     const l = this.link();
     return l ? invitationMessage(l.user.name, l.link, l.expiresAt, roleLabel(l.user.roleName)) : '';
@@ -148,6 +149,22 @@ export class UserDrawerComponent {
       this.changed.emit();
     } catch (err) {
       this.error.set(errorMessage(err, 'Couldn’t make a new link. Please try again.'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected async unlock(): Promise<void> {
+    const user = this.user();
+    if (!user || this.saving()) return;
+    this.saving.set(true);
+    this.error.set('');
+    try {
+      this.user.set(await this.usersApi.unlock(user.id));
+      this.toast.show(`Unlocked ${user.name}. They can sign in again now.`);
+      this.changed.emit();
+    } catch (err) {
+      this.error.set(errorMessage(err, 'Couldn’t unlock. Please try again.'));
     } finally {
       this.saving.set(false);
     }

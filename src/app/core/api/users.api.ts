@@ -39,6 +39,11 @@ export class UsersApi {
   }
 
   /** Only for someone who never set up their account. */
+  /** Lets someone locked out after too many wrong passwords try again now. */
+  unlock(id: number): Promise<StaffUser> {
+    return this.api.post(`/users/${id}/unlock`, {});
+  }
+
   withdraw(id: number): Promise<void> {
     return this.api.delete(`/users/${id}`);
   }

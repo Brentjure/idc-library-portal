@@ -29,6 +29,14 @@
       <app-alert kind="warn">This is you. You can’t disable yourself or take away your own Administrator role.</app-alert>
     }
 
+    @if (mode() === 'edit' && user()?.lockedUntil && status(); as st) {
+      <div class="flex flex-wrap items-center gap-2.5 rounded-xl border border-bad-bg bg-bad-bg/40 p-3">
+        <span class="pill" [class]="st.pill">{{ st.label }}</span>
+        <small class="mr-auto text-xs text-ink-2">Too many wrong passwords. Unlocks by itself at {{ lockedUntilTime() }}.</small>
+        <button type="button" class="btn btn-sm" [disabled]="saving()" (click)="unlock()">Unlock now</button>
+      </div>
+    }
+
     @if (mode() === 'edit' && isInvited() && status(); as st) {
       <div class="flex flex-wrap items-center gap-2.5 rounded-xl border border-line bg-surface-2 p-3">
         <span class="pill" [class]="st.pill">{{ st.label }}</span>

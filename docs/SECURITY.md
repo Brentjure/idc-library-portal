@@ -30,8 +30,8 @@ New staff join through **Users → Invite**, which produces a link `{APP_PORTAL_
      `/users`, no trailing slash. It also sets the CORS origin.
    - **Links already sent:** the token is still valid. Send the same link with the right domain, or press **New link**
      on the user's row, which replaces the token.
-   - **Prevent it:** make the backend refuse to start in `prod` when `APP_PORTAL_URL` isn't an `https://` address
-     without a path, and log the value at start-up. *(To do.)*
+   - **Prevented (done):** in `prod` the backend refuses to start unless `APP_PORTAL_URL` is an `https://` address
+     with no path, and logs the value at start-up. It can't tell a wrong site name, so still check the first invitation.
 2. **Links are shared over WhatsApp/SMS.** Anyone holding an unused link can set that account's password.
    - Send each link privately, never in a group.
    - If a link was posted somewhere public, press **New link**, which makes the old one stop working.
@@ -47,8 +47,8 @@ New staff join through **Users → Invite**, which produces a link `{APP_PORTAL_
 
 | # | Gap | Risk | Fix |
 |---|---|---|---|
-| H1 | **No sign-in protection**: no Turnstile, lockout or rate limit | Unlimited password guessing against staff emails | Cloudflare Turnstile on the sign-in page, verified on the server; lock the account for 15 minutes after 5 failed attempts; per-IP rate limit on `/auth/login`. The CSP then needs `https://challenges.cloudflare.com` in `script-src` and `frame-src`. |
-| H2 | **Render can be called directly**, bypassing Cloudflare | Skips Cloudflare's protections; `X-Forwarded-For` can be faked, which would defeat per-IP limits from H1 | The Pages proxy adds a secret header (e.g. `X-Proxy-Key`) from a Pages secret; the backend rejects requests without it, except `/api/v1/health`. Do this together with H1. |
+| H1 | ~~No sign-in protection~~ **Done (migration 014).** | — | Turnstile on the sign-in page, checked on the server (fails closed if Cloudflare can't be reached). After `app.security.login.max-failed-attempts` wrong passwords in a row (5) the account locks for `lock-minutes` (15); Users shows **Locked** with **Unlock now**. One address may try `max-attempts-per-ip-per-minute` (10) times a minute. All in `application.yml`. Turnstile stays off until `APP_TURNSTILE_SITE_KEY` and `APP_TURNSTILE_SECRET_KEY` are set. |
+| H2 | ~~Render can be called directly~~ **Done.** | — | The Pages proxy sends `X-Proxy-Key` (Pages secret `PROXY_KEY`); with `APP_PROXY_KEY` set to the same value on Render, everything else gets 403, except `/api/v1/health`. Off until both are set. |
 | H3 | **The Google Sheet is still shared by link** | About 170 members' phone numbers and emails readable by anyone with the link | Sheet → Share → General access → **Restricted**. Delete `D:\projects\library\backups\012_import_from_sheet.sql` and other local exports. |
 
 ### Medium
@@ -112,7 +112,8 @@ this when inviting staff.
 ## Suggested order
 
 1. Set `APP_PORTAL_URL` on Render (onboarding 1), restrict the Google Sheet (H3).
-2. Turnstile, sign-in lockout and the proxy secret header (H1 + H2), with the start-up check for `APP_PORTAL_URL`.
+2. ~~Turnstile, sign-in lockout and the proxy secret header (H1 + H2), with the start-up check for `APP_PORTAL_URL`.~~
+   Built; switch on with the keys in `DEPLOY.md` ("Sign-in protection").
 3. Session hardening, revocation and session tracking (M1 + M2 + M5). They share one change: a session id in the
    token, checked on every request.
 4. Limited database role (M3), Dependabot (L1), audit log (M4).

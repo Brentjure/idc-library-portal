@@ -1,5 +1,5 @@
 import { StaffStatus, StaffUser } from '../../core/models/user.model';
-import { formatDate, formatShort } from '../../utils/dates';
+import { formatDate, formatShort, formatTime } from '../../utils/dates';
 
 export type StatusFilter = 'all' | StaffStatus;
 
@@ -10,7 +10,7 @@ export interface UserQuery {
 }
 
 export interface UserStatusView {
-  label: 'Active' | 'Invited' | 'Invite expired' | 'Disabled';
+  label: 'Active' | 'Locked' | 'Invited' | 'Invite expired' | 'Disabled';
   pill: 'pill-ok' | 'pill-gold' | 'pill-loan' | 'pill-bad';
   /** Small line under the pill. */
   note: string;
@@ -25,7 +25,9 @@ export function userStatus(user: StaffUser): UserStatusView {
     case 'DISABLED':
       return { label: 'Disabled', pill: 'pill-bad', note: 'Can’t sign in' };
     default:
-      return { label: 'Active', pill: 'pill-ok', note: '' };
+      return user.lockedUntil
+        ? { label: 'Locked', pill: 'pill-bad', note: `Wrong passwords · until ${formatTime(user.lockedUntil)}` }
+        : { label: 'Active', pill: 'pill-ok', note: '' };
   }
 }
 

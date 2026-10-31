@@ -32,3 +32,9 @@ export type Permission =
   | 'MANAGE_USERS'
   | 'VIEW_REPORTS'
   | 'reports.export';
+
+/** What the sign-in page needs before anyone signs in (GET /auth/config). */
+export interface AuthConfig {
+  /** Cloudflare Turnstile site key; null when Turnstile is off. */
+  turnstileSiteKey: string | null;
+}

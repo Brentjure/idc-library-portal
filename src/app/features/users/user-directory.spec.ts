@@ -14,6 +14,7 @@ function user(overrides: Partial<StaffUser>): StaffUser {
     roleId: 1,
     roleName: 'ADMIN',
     createdAt: '2026-10-01T09:00:00',
+    lockedUntil: null,
     ...overrides,
   };
 }
@@ -30,6 +31,14 @@ describe('users directory', () => {
     expect(userStatus(GRACE)).toEqual({ label: 'Invited', pill: 'pill-gold', note: 'Link works until Sat 24 Oct' });
     expect(userStatus(RUTH)).toEqual({ label: 'Invite expired', pill: 'pill-loan', note: 'Send a new link' });
     expect(userStatus(SAM).label).toBe('Disabled');
+  });
+
+  it('shows a locked account with the time it unlocks', () => {
+    expect(userStatus({ ...BRENT, lockedUntil: '2026-10-31T14:32:00' })).toEqual({
+      label: 'Locked',
+      pill: 'pill-bad',
+      note: 'Wrong passwords · until 14:32',
+    });
   });
 
   it('adds up the summary strip', () => {

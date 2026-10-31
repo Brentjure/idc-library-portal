@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertComponent } from '../../components/alert/alert.component';
 import { IconComponent } from '../../components/icon/icon.component';
+import { TurnstileComponent } from '../../components/turnstile/turnstile.component';
 import { errorMessage } from '../../core/api/api-client.service';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -16,7 +17,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Staff sign-in: yellow brand panel on the left, sign-in card on the right. */
 @Component({
   selector: 'app-login-page',
-  imports: [IconComponent, AlertComponent],
+  imports: [IconComponent, AlertComponent, TurnstileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login-page.component.html',
   host: { class: 'grid min-h-dvh bg-bg min-[861px]:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]' },
@@ -37,6 +38,18 @@ export class LoginPageComponent {
   protected readonly error = signal(
     inject(ActivatedRoute).snapshot.queryParamMap.has('expired') ? 'Your session ended. Please sign in again.' : '',
   );
+  /** Cloudflare Turnstile, when the server has it switched on. */
+  protected readonly turnstileKey = signal<string | null>(null);
+  protected readonly turnstileToken = signal<string | null>(null);
+  private readonly turnstile = viewChild(TurnstileComponent);
+
+  constructor() {
+    // Without the settings the form still works; the server refuses sign-in if a check was needed.
+    this.auth.config().then(
+      (config) => this.turnstileKey.set(config.turnstileSiteKey),
+      () => this.turnstileKey.set(null),
+    );
+  }
 
   protected async submit(): Promise<void> {
     const email = this.email().trim();
@@ -46,14 +59,20 @@ export class LoginPageComponent {
     if (this.emailError() || this.passwordError()) {
       return;
     }
+    if (this.turnstileKey() && !this.turnstileToken()) {
+      this.error.set('Please complete the security check below the password.');
+      return;
+    }
 
     this.busy.set(true);
     try {
-      await this.auth.signIn(email, this.password(), this.keep());
+      await this.auth.signIn(email, this.password(), this.keep(), this.turnstileToken());
       await this.router.navigate(['/']);
     } catch (err) {
       this.error.set(errorMessage(err, 'Could not sign in. Please try again.'));
       this.password.set('');
+      // Each token works once.
+      this.turnstile()?.reset();
     } finally {
       this.busy.set(false);
     }

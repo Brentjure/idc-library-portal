@@ -16,6 +16,8 @@ export interface StaffUser {
   /** e.g. ADMIN, LIBRARIAN. Use roleLabel() to display. */
   roleName: string | null;
   createdAt: string | null;
+  /** Set while sign-in is locked after too many wrong passwords. */
+  lockedUntil: string | null;
 }
 
 export interface NewStaffUser {

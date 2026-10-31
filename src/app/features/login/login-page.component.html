@@ -89,7 +89,9 @@
           <p class="err-msg">{{ passwordError() }}</p>
         }
       </div>
-      <!-- Cloudflare Turnstile (managed mode) goes here once the site key is set up. See docs/HANDOFF.md. -->
+      @if (turnstileKey(); as key) {
+        <app-turnstile [siteKey]="key" (tokenChange)="turnstileToken.set($event)" />
+      }
       <label class="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink-2">
         <input type="checkbox" class="size-[18px] accent-gold-deep" [checked]="keep()" (change)="keep.set(checked($event))" />
         Keep me signed in on this computer

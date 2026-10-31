@@ -33,13 +33,30 @@ Environment variables:
 | `APP_JWT_SECRET` | 32+ random bytes, e.g. `openssl rand -base64 32` |
 | `APP_PORTAL_URL` | the portal address from step 3: `https://idc-library-portal.pages.dev` (base only). Invitation links and CORS use it. |
 
-The `prod` profile has no defaults for these. The app won't start if one is missing.
+The `prod` profile has no defaults for these. The app won't start if one is missing, or if `APP_PORTAL_URL` isn't a
+plain `https://` address.
+
+### Sign-in protection (optional variables, all off until set)
+
+| Name | Value |
+|---|---|
+| `APP_PROXY_KEY` | 32+ random characters; the same value as `PROXY_KEY` on Pages. Then only the portal can reach the API. |
+| `APP_TURNSTILE_SITE_KEY` | from Cloudflare → Turnstile → your widget (public) |
+| `APP_TURNSTILE_SECRET_KEY` | from the same widget (secret) |
+| `APP_LOGIN_MAX_FAILED_ATTEMPTS` | wrong passwords before an account locks (default 5) |
+| `APP_LOGIN_LOCK_MINUTES` | how long it stays locked (default 15) |
+| `APP_LOGIN_MAX_ATTEMPTS_PER_IP` | sign-in attempts per address per minute (default 10) |
+
+Order when switching the proxy key on: set `PROXY_KEY` on Pages and redeploy the portal first, then `APP_PROXY_KEY` on
+Render. The other way round, the live portal gets 403 until it is redeployed.
 
 ## 3. Portal (Cloudflare Pages)
 Workers & Pages → Create → Pages → connect the portal repository.
 - Build command: `npx ng build`
 - Build output directory: `dist/library-portal/browser`
 - `BACKEND_URL` (the Render address, no trailing slash) is in `wrangler.toml` under `[vars]`. With that file present, Pages ignores plain variables set in the dashboard. Node 22 comes from `.nvmrc`.
+- `PROXY_KEY` is a **secret** (Settings → Variables and Secrets → Add → type *Secret*), never in git. Secrets can be
+  set in the dashboard even with `wrangler.toml`. A new value applies from the next deployment.
 
 After the first deploy, set `APP_PORTAL_URL` on Render to the Pages address, so invitation links point at it.
 

@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiClient } from '../api/api-client.service';
-import { AuthUser, LoginResult, Permission } from '../models/auth.model';
+import { AuthConfig, AuthUser, LoginResult, Permission } from '../models/auth.model';
 
 interface Session {
   token: string;
@@ -42,8 +42,13 @@ export class AuthService {
     return this.user()?.permissions.includes(permission) ?? false;
   }
 
-  async signIn(email: string, password: string, keepSignedIn: boolean): Promise<void> {
-    const result = await this.api.post<LoginResult>('/auth/login', { email, password });
+  /** Sign-in page settings, e.g. whether to show Turnstile. */
+  config(): Promise<AuthConfig> {
+    return this.api.get('/auth/config');
+  }
+
+  async signIn(email: string, password: string, keepSignedIn: boolean, turnstileToken: string | null = null): Promise<void> {
+    const result = await this.api.post<LoginResult>('/auth/login', { email, password, turnstileToken });
     const session: Session = { token: result.token, expiresAt: result.expiresAt, user: result.user };
     clearStorage();
     try {

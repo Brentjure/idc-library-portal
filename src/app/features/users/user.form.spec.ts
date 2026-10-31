@@ -13,6 +13,7 @@ const GRACE: StaffUser = {
   roleId: 2,
   roleName: 'LIBRARIAN',
   createdAt: null,
+  lockedUntil: null,
 };
 
 describe('User form', () => {
